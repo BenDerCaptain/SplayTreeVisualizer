@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <meta charset="utf-8">
+    <title>Basic JavaScript module example</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6" crossorigin="anonymous">
+    <link href="Menu.css" rel="stylesheet"/>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@svgdotjs/svg.js@3.0/dist/svg.min.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script type="text/javascript" src="SplayTree.js"></script>
+    <script type="text/javascript" src="Animator.js"></script>
+</head>
+<body onload="init()">
+<div class="container w-100">
+    <nav class="navbar navbar-expand-lg navbar-light sticky-top bg-light">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="#">Splaynet</a>
+            <div class="collapse navbar-collapse p-3" id="navbarToggler">
+                <div class=" d-inline-flex m-2 align-self-center">
+                    <input class="form-control me-2" placeholder="15" type="number" id="nodeCount"/>
+                    <button class="btn btn-outline-success me-2" type="button" id="generateTree" onclick="generateTree()">Generate</button>
+                    <button class="btn btn-outline-success me-2 text-nowrap" id="resetTree" onclick="resetTree()">Reset Tree</button>
+                </div>
+                <div class=" m-2 align-self-center d-flex">
+                    <button class="btn btn-outline-success me-2" id="saveTree" onclick="saveTree()">Save</button>
+                    <button class="btn btn-outline-success me-2" id="loadTree" onclick="loadTree()">Load</button>
+                </div>
+                <div class="  m-2 align-self-center">
+                    <div>
+                        <label for="animationTypeSelection" class="navbar-text">AnimationType:</label>
+                    </div>
+                    <div>
+                        <select id="animationTypeSelection" class="form-control" onchange="updateNavbarButtons()">
+                            <option value="flow">Flow</option>
+                            <option value="auto">AutoFlow</option>
+                            <option value="step">StepByStep</option>
+                        </select>
+                    </div>
+                </div>
+                <div class=" m-2 align-self-center">
+                    <div >
+                        <label for="animationSpeed" class="navbar-text">AnimationSpeed:</label>
+                    </div>
+                    <div>
+                        <input type="range" class="form-range no-border" min="1" max="100" value="5" step="1" id="animationSpeed" onchange="changeSpeed()">
+                    </div>
+                </div>
+                <div class=" m-2 align-self-center">
+                    <button class="btn btn-outline-success me-2" id="startAnimation" onclick="startAnimation()">StartAnimation</button>
+                    <button class="btn btn-outline-success me-2" id="stepAnimation" onclick="nextAnimationStep()">StepAnimation</button>
+                </div>
+                <div class="m-2 align-self-center">
+                    <div id="SourceText" class="text-nowrap">Source: ???</div>
+                    <div id="DestinationText" class="text-nowrap">Destination: ???</div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <hr>
+
+    <div id="logs" class="row">
+        <div class="col">
+            <div id="animationHist border" class="overflow-auto logContainer w-100">
+                <ol reversed class="list-group list-group-numbered w-100" >
+                    <li class="list-group-item">
+                        <b>HI</b>
+                    </li>
+                </ol>
+            </div>
+        </div>
+        <div class="col">
+            <div id="communicationHist border" class="overflow-auto logContainer">
+                <li class="list-group-item">NodeA NodeB</li>
+            </div>
+        </div>
+    </div>
+
+    <hr>
+
+    <div id="SVGContainer" class="svg-wrapper row border d-flex" onmouseup="checkSelected()">
+
+    </div>
+</div>
+<script type="text/javascript" src="main.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+
+</body>
+</html>

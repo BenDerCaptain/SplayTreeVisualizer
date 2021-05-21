@@ -1,0 +1,9 @@
+.logContainer{
+    min-height: 8em;
+    height: 10em;
+}
+
+.svg-wrapper{
+    height:750px;
+    background-color:lightcoral;
+}
