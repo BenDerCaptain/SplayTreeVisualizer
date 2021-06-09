@@ -84,40 +84,41 @@ function reset(){
     SelectedSource = -1
     SelectedDestination = -1
 }
+
+
 let timeline = new SVG.Timeline();
 var start_time = 0;
 
 function stepAnimation(step, sourceNode) {
-
+    console.log(step + "\ rotation")
     //setup timeline
     let is_left_child = (sourceNode.parent.leftChild === sourceNode)
     switch(step){
         case "ZIG":
-            if(is_left_child) start_time = rotation_right(sourceNode, timeline, start_time)
-            else start_time = rotation_left(sourceNode, timeline, start_time)
+            if(is_left_child) start_time = zig(sourceNode, timeline, start_time)
+            else start_time = zag(sourceNode, timeline, start_time)
             break;
         case "ZIGZIG":
             if(is_left_child) {
-                start_time = rotation_right(sourceNode.parent, timeline, start_time)
-                start_time = rotation_right(sourceNode, timeline, start_time)
+                start_time = zigzig(sourceNode, timeline, start_time)
             }
             else {
-                start_time = rotation_left(sourceNode.parent, timeline, start_time)
-                start_time = rotation_left(sourceNode, timeline, start_time)
+                start_time = zagzag(sourceNode, timeline, start_time)
             }
             break;
         case "ZIGZAG":
             if(is_left_child){
-                start_time = rotation_right(sourceNode, timeline, start_time)
-                start_time = rotation_left(sourceNode, timeline, start_time)
+                start_time = zigzag(sourceNode, timeline, start_time)
             }
             else {
-                start_time = rotation_left(sourceNode, timeline, start_time)
-                start_time = rotation_right(sourceNode, timeline, start_time)
+                start_time = zagzig(sourceNode, timeline, start_time)
             }
             break;
     }
 
+    let done_runner = new SVG.Runner()
+    done_runner.timeline(timeline)
+    done_runner.animate(1, start_time, "absolute").after(function (){console.log("done")})
 }
 
 function finish_animation(){
@@ -125,7 +126,473 @@ function finish_animation(){
     start_time = 0
 }
 
-function rotation_left(nodeToRotate, timeline, start_time) {
+function zag(nodeToRotate, timeline, start_time) {
+    console.log("zag rotation");
+    //      x, p... Nodes
+    //      A, B, C... Subtrees
+    //
+    //       p            x
+    //      / \          / \
+    //     A   x    =   p   C
+    //        / \      / \
+    //       B   C    A   B
+    //
+
+    //Preorchestrate animation on the current positions
+    //execute animations as two zig rotations
+    //
+    //1. Zag x
+    //1.1 move x to p (up)
+    //1.2 move p to A (down)
+    //1.3 move A to p.left (down)
+    //1.4 move B to p.right (left)
+    //1.5 move C to x.right (up)
+    //3. Redraw lines (FIN)
+    //
+    let destinationNode = nodeToRotate.parent;
+    let y_level = destinationNode.level()
+
+    let idSource = "#node_" + nodeToRotate.value;
+    let idSource_text = "#node_" + nodeToRotate.value + "_text";
+
+    let idDest = "#node_" + destinationNode.value;
+    let idDest_text = "#node_" + destinationNode.value + "_text";
+
+    let nodeToAnimate = SVG(idSource)
+    let textToAnimate = SVG(idSource_text)
+
+    let targetNode = SVG(idDest)
+    let targetText = SVG(idDest_text)
+
+    //common ancestor positon -> important for all other positionings
+    let target_xpos = targetNode.attr("cx");
+    let target_ypos = targetNode.attr("cy");
+
+    //Zig source to target
+    start_time = moveTo(nodeToAnimate, textToAnimate, timeline, start_time, target_xpos, target_ypos);
+
+    //determine nodes to move
+
+    ////parent -> left rot -> left child
+    let left_child_xpos = target_xpos - width / Math.pow(2, (y_level + 1) + 1);
+    let left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+    start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    ////parent leftchild + subtree -> move down
+    let downNode = destinationNode.leftChild;
+    if (downNode !== null) {
+        let idChildDest = "#node_" + downNode.value;
+        let idChildDest_text = "#node_" + downNode.value + "_text";
+        let left_child_subtree_xpos = left_child_xpos - width / Math.pow(2, (y_level + 1) + 2);
+        let left_child_subtree_ypos = ((y_level + 1) + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(downNode, SVG(idChildDest), SVG(idChildDest_text), timeline, start_time, y_level + 2, left_child_subtree_xpos, left_child_subtree_ypos);
+    }
+
+    ////src leftchild + subtree -> move left
+    let leftNode = nodeToRotate.leftChild;
+    if (leftNode !== null) {
+        let idleft = "#node_" + leftNode.value;
+        let idLeft_text = "#node_" + leftNode.value + "_text";
+        let leftSubtree_xpos = left_child_xpos + width / Math.pow(2, (y_level + 2) + 1);
+        let leftSubtree_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(leftNode, SVG(idleft), SVG(idLeft_text), timeline, start_time, y_level + 2, leftSubtree_xpos, leftSubtree_ypos);
+    }
+
+    ////src rightchild + subtree -> move up
+    let upNode = nodeToRotate.rightChild;
+    if (upNode !== null) {
+        let idUp = "#node_" + upNode.value;
+        let idUp_text = "#node_" + upNode.value + "_text";
+        let upSubtree_xpos = target_xpos + width / Math.pow(2, (y_level + 1) + 1);
+        let upSubtree_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(upNode, SVG(idUp), SVG(idUp_text), timeline, start_time, y_level + 1, upSubtree_xpos, upSubtree_ypos);
+    }
+
+    return start_time
+}
+
+function zig(nodeToRotate, timeline, start_time) {
+    console.log("zig rotation");
+    //      x, p... Nodes
+    //      A, B, C... Subtrees
+    //
+    //         p            x
+    //        / \          / \
+    //       x   C  =     A   p
+    //      / \              / \
+    //     A   B            B   C
+    //
+
+    //Preorchestrate animation on the current positions
+    //execute animations as two zig rotations
+    //
+    //1. Zig x
+    //1.1 move x to p (up)
+    //1.2 move p to C (down)
+    //1.3 move C to p.right (down)
+    //1.4 move B to p.left (right)
+    //1.5 move A to x.left (up)
+    //3. Redraw lines (FIN)
+    //
+
+    let destinationNode = nodeToRotate.parent;
+    console.log(destinationNode)
+    let y_level = destinationNode.level()
+
+    let idSource = "#node_" + nodeToRotate.value;
+    let idSource_text = "#node_" + nodeToRotate.value + "_text";
+
+    let idDest = "#node_" + destinationNode.value;
+    let idDest_text = "#node_" + destinationNode.value + "_text";
+
+    let nodeToAnimate = SVG(idSource)
+    let textToAnimate = SVG(idSource_text)
+
+    let targetNode = SVG(idDest)
+    let targetText = SVG(idDest_text)
+
+    //common ancestor positon -> important for all other positionings
+    let target_xpos = targetNode.attr("cx");
+    let target_ypos = targetNode.attr("cy");
+
+    //Zig source to target
+    start_time = moveTo(nodeToAnimate, textToAnimate, timeline, start_time, target_xpos, target_ypos);
+
+    //determine nodes to move
+
+    ////parent -> right rot -> right child
+    let left_child_xpos = target_xpos + width / Math.pow(2, (y_level + 1) + 1);
+    let left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+    start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    ////parent rightChild + subtree -> move down
+    let downNode = destinationNode.rightChild;
+    if (downNode !== null) {
+        let idChildDest = "#node_" + downNode.value;
+        let idChildDest_text = "#node_" + downNode.value + "_text";
+        let left_child_subtree_xpos = left_child_xpos + width / Math.pow(2, (y_level + 1) + 2);
+        let left_child_subtree_ypos = ((y_level + 1) + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(downNode, SVG(idChildDest), SVG(idChildDest_text), timeline, start_time, y_level + 2, left_child_subtree_xpos, left_child_subtree_ypos);
+    }
+
+    ////src rightchild + subtree -> move right
+    let leftNode = nodeToRotate.rightChild;
+    if (leftNode !== null) {
+        let idleft = "#node_" + leftNode.value;
+        let idLeft_text = "#node_" + leftNode.value + "_text";
+        let leftSubtree_xpos = left_child_xpos - width / Math.pow(2, (y_level + 2) + 1);
+        let leftSubtree_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(leftNode, SVG(idleft), SVG(idLeft_text), timeline, start_time, y_level + 2, leftSubtree_xpos, leftSubtree_ypos);
+    }
+
+    ////src leftchild + subtree -> move up
+    let upNode = nodeToRotate.leftChild;
+    if (upNode !== null) {
+        let idUp = "#node_" + upNode.value;
+        let idUp_text = "#node_" + upNode.value + "_text";
+        let upSubtree_xpos = target_xpos - width / Math.pow(2, (y_level + 1) + 1);
+        let upSubtree_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(upNode, SVG(idUp), SVG(idUp_text), timeline, start_time, y_level + 1, upSubtree_xpos, upSubtree_ypos);
+    }
+
+    return start_time;
+
+}
+
+function zagzag(nodeToRotate, timeline, start_time) {
+    console.log("zagzag rotation");
+
+    //      x, p, g... Nodes
+    //      A, B, C, D... Subtrees
+    //
+    //      g                       x
+    //     / \                     / \
+    //    A   p                   p   D
+    //       / \       =         / \
+    //      B   x               g   C
+    //         / \             / \
+    //        C   D           A   B
+
+    //Preorchestrate animation on the current positions
+    //execute animations as two zig rotations
+    //
+    //1. Zag p
+    //1.1 move p to g (up)
+    //1.2 move g to A (down)
+    //1.3 move A to g.left (down)
+    //1.4 move B to g.right (left)
+    //1.5 move x to p.right (up)
+    //2 Zig x
+    //2.1 move x to p (up)
+    //2.2 move p to g (down)
+    //2.3 move g to A (down)
+    //2.4 move A to g.left (down)
+    //2.5 move B to g.right (down)
+    //2.6 move C to p.right (left)
+    //3. Redraw lines (FIN)
+
+    let destinationNode = nodeToRotate.parent;
+    let y_level = destinationNode.level()
+
+    let idSource = "#node_" + nodeToRotate.value;
+    let idSource_text = "#node_" + nodeToRotate.value + "_text";
+
+    let idDest = "#node_" + destinationNode.value;
+    let idDest_text = "#node_" + destinationNode.value + "_text";
+
+    let nodeToAnimate = SVG(idSource)
+    let textToAnimate = SVG(idSource_text)
+
+    let targetNode = SVG(idDest)
+    let targetText = SVG(idDest_text)
+
+    //common ancestor positon -> important for all other positionings
+    let target_xpos = targetNode.attr("cx");
+    let target_ypos = targetNode.attr("cy");
+
+    //Zig source to target
+    start_time = moveTo(nodeToAnimate, textToAnimate, timeline, start_time, target_xpos, target_ypos);
+
+    //determine nodes to move
+
+    ////parent -> left rot -> left child
+    let left_child_xpos = target_xpos - width / Math.pow(2, (y_level + 1) + 1);
+    let left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+    start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    ////parent leftchild + subtree -> move down
+    let downNode = destinationNode.leftChild;
+    if (downNode !== null) {
+        let idChildDest = "#node_" + downNode.value;
+        let idChildDest_text = "#node_" + downNode.value + "_text";
+        let left_child_subtree_xpos = left_child_xpos - width / Math.pow(2, (y_level + 1) + 2);
+        let left_child_subtree_ypos = ((y_level + 1) + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(downNode, SVG(idChildDest), SVG(idChildDest_text), timeline, start_time, y_level + 2, left_child_subtree_xpos, left_child_subtree_ypos);
+    }
+
+    ////src leftchild + subtree -> move left
+    let leftNode = nodeToRotate.leftChild;
+    if (leftNode !== null) {
+        let idleft = "#node_" + leftNode.value;
+        let idLeft_text = "#node_" + leftNode.value + "_text";
+        let leftSubtree_xpos = left_child_xpos + width / Math.pow(2, (y_level + 2) + 1);
+        let leftSubtree_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(leftNode, SVG(idleft), SVG(idLeft_text), timeline, start_time, y_level + 2, leftSubtree_xpos, leftSubtree_ypos);
+    }
+
+    ////src rightchild + subtree -> move up
+    let upNode = nodeToRotate.rightChild;
+    if (upNode !== null) {
+        let idUp = "#node_" + upNode.value;
+        let idUp_text = "#node_" + upNode.value + "_text";
+        let upSubtree_xpos = target_xpos + width / Math.pow(2, (y_level + 1) + 1);
+        let upSubtree_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(upNode, SVG(idUp), SVG(idUp_text), timeline, start_time, y_level + 1, upSubtree_xpos, upSubtree_ypos);
+    }
+
+    return start_time
+}
+
+function zigzig(nodeToRotate, timeline, start_time) {
+
+    console.log("zigzig rotation");
+
+    //      x, p, g... Nodes
+    //      A, B, C, D... Subtrees
+    //
+    //          g            x
+    //         / \          / \
+    //        p   D        A   p
+    //       / \      =>      / \
+    //      x   C            B   g
+    //     / \                  / \
+    //    A   B                C   D
+
+    //Preorchestrate animation on the current positions
+    //execute animations as two zig rotations
+    //
+    //1. Zig p
+    //1.1 move p to g (up)
+    //1.2 move g to D (down)
+    //1.3 move D to g.right (down)
+    //1.4 move C to g.left (right)
+    //1.5 move x to p.left (up)
+    //2 Zig x
+    //2.1 move x to p (up)
+    //2.2 move p to g (down)
+    //2.3 move g to D (down)
+    //2.4 move D to g.right (down)
+    //2.5 move C to g.left (down)
+    //2.6 move B to p.left (right)
+    //3. Redraw lines (FIN)
+
+    //CREATING DATA FIELDS
+
+    let sourceNode = nodeToRotate
+    let parentNode = nodeToRotate.parent;
+    let grandParentNode = nodeToRotate.parent.parent;
+
+    //granparent is the highest in the list, so the search is quickest
+    let grandparent_y_level = grandParentNode.level()
+    let parent_y_level = grandparent_y_level + 1
+    let source_y_level = parent_y_level + 1
+
+    let idSource = "#node_" + sourceNode.value;
+    let idSource_text = "#node_" + sourceNode.value + "_text";
+
+    let idParent = "#node_" + parentNode.value;
+    let idParent_text = "#node_" + parentNode.value + "_text";
+
+    let idGParent = "#node_" + grandParentNode.value;
+    let idGParent_text = "#node_" + grandParentNode.value + "_text";
+
+    /// ANIMATION VALUES DEFINITIONS
+    let nodeToAnimate;
+    let textToAnimate;
+    let targetNode;
+    let targetText;
+    let target_xpos;
+    let target_ypos;
+    let left_child_xpos;
+    let left_child_ypos;
+    let downNode;
+    let leftNode;
+    let upNode;
+    let bridgeNode;
+    let bridgeText;
+
+    /// ANIMATION START
+
+    //Zig parent to destination
+
+    //get nodes to animate (parent, grandparent)
+    nodeToAnimate = SVG(idParent)
+    textToAnimate = SVG(idParent_text)
+
+    targetNode = SVG(idGParent)
+    targetText = SVG(idGParent_text)
+
+    //target (grandparent) positon -> important for all other positionings
+    target_xpos = targetNode.attr("cx");
+    target_ypos = targetNode.attr("cy");
+
+    start_time = moveTo(nodeToAnimate, textToAnimate, timeline, start_time, target_xpos, target_ypos);
+
+    //determine nodes to move
+    let y_level = grandparent_y_level;
+    ////parent -> right rot -> right child
+    left_child_xpos = target_xpos + width / Math.pow(2, (y_level + 1) + 1);
+    left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+    start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    ////parent rightChild + subtree -> move down
+    downNode = grandParentNode.rightChild;
+    if (downNode !== null) {
+        let idChildDest = "#node_" + downNode.value;
+        let idChildDest_text = "#node_" + downNode.value + "_text";
+        let left_child_subtree_xpos = left_child_xpos + width / Math.pow(2, (y_level + 1) + 2);
+        let left_child_subtree_ypos = ((y_level + 1) + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(downNode, SVG(idChildDest), SVG(idChildDest_text), timeline, start_time, y_level + 2, left_child_subtree_xpos, left_child_subtree_ypos);
+    }
+
+    ////src rightchild + subtree -> move right
+    leftNode = parentNode.rightChild;
+    if (leftNode !== null) {
+        let idleft = "#node_" + leftNode.value;
+        let idLeft_text = "#node_" + leftNode.value + "_text";
+        let leftSubtree_xpos = left_child_xpos - width / Math.pow(2, (y_level + 2) + 1);
+        let leftSubtree_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(leftNode, SVG(idleft), SVG(idLeft_text), timeline, start_time, y_level + 2, leftSubtree_xpos, leftSubtree_ypos);
+    }
+
+    ////src leftchild + subtree -> move up
+    upNode = parentNode.leftChild;
+    if (upNode !== null) {
+        let idUp = "#node_" + upNode.value;
+        let idUp_text = "#node_" + upNode.value + "_text";
+        let upSubtree_xpos = target_xpos - width / Math.pow(2, (y_level + 1) + 1);
+        let upSubtree_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(upNode, SVG(idUp), SVG(idUp_text), timeline, start_time, y_level + 1, upSubtree_xpos, upSubtree_ypos);
+    }
+
+
+    //zig target to destination
+
+    //get nodes to animate (source, parent)
+    nodeToAnimate = SVG(idSource)
+    textToAnimate = SVG(idSource_text)
+
+    bridgeNode = SVG(idParent)
+    bridgeText = SVG(idParent_text)
+
+    targetNode = SVG(idGParent)
+    targetText = SVG(idGParent_text)
+
+    //target (still grandparent, since animation didn't play yet) positon -> important for all other positionings
+    target_xpos = targetNode.attr("cx");
+    target_ypos = targetNode.attr("cy");
+
+    start_time = moveTo(nodeToAnimate, textToAnimate, timeline, start_time, target_xpos, target_ypos);
+
+    //determine nodes to move
+
+    ////move bridge to right child
+    left_child_xpos = target_xpos + width / Math.pow(2, (y_level + 1) + 1);
+    left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+    start_time = moveTo(bridgeNode, bridgeText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    ////parent -> right rot -> right child
+
+    left_child_xpos = left_child_xpos + width / Math.pow(2, (y_level + 2) + 1);
+    left_child_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+    start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    ////parent rightChild + subtree -> move down
+    downNode = grandParentNode.rightChild;
+    if (downNode !== null) {
+        let idChildDest = "#node_" + downNode.value;
+        let idChildDest_text = "#node_" + downNode.value + "_text";
+        let left_child_subtree_xpos = left_child_xpos + width / Math.pow(2, (y_level + 2) + 2);
+        let left_child_subtree_ypos = ((y_level + 2) + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(downNode, SVG(idChildDest), SVG(idChildDest_text), timeline, start_time, y_level + 3, left_child_subtree_xpos, left_child_subtree_ypos);
+    }
+
+    ////src rightchild + subtree -> move right
+    leftNode = parentNode.rightChild;
+    if (leftNode !== null) {
+        let idleft = "#node_" + leftNode.value;
+        let idLeft_text = "#node_" + leftNode.value + "_text";
+        let leftSubtree_xpos = left_child_xpos - width / Math.pow(2, (y_level + 2) + 2);
+        let leftSubtree_ypos = ((y_level + 2)+1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(leftNode, SVG(idleft), SVG(idLeft_text), timeline, start_time, y_level + 3, leftSubtree_xpos, leftSubtree_ypos);
+    }
+
+    ////src rightchild + subtree -> move right
+    leftNode = sourceNode.rightChild;
+    if (leftNode !== null) {
+        let idleft = "#node_" + leftNode.value;
+        let idLeft_text = "#node_" + leftNode.value + "_text";
+        let leftSubtree_xpos = left_child_xpos - width / Math.pow(2, (y_level + 1) + 1);
+        let leftSubtree_ypos = ((y_level + 1) + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(leftNode, SVG(idleft), SVG(idLeft_text), timeline, start_time, y_level + 2, leftSubtree_xpos, leftSubtree_ypos);
+    }
+
+    ////src leftchild + subtree -> move up
+    upNode = sourceNode.leftChild;
+    if (upNode !== null) {
+        let idUp = "#node_" + upNode.value;
+        let idUp_text = "#node_" + upNode.value + "_text";
+        let upSubtree_xpos = target_xpos - width / Math.pow(2, (y_level + 1) + 1);
+        let upSubtree_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+        start_time = moveSubTree(upNode, SVG(idUp), SVG(idUp_text), timeline, start_time, y_level + 1, upSubtree_xpos, upSubtree_ypos);
+    }
+
+
+    return start_time;
+
+}
+
+function zagzig(nodeToRotate, timeline, start_time) {
     console.log("left rotation");
 
     let destinationNode = nodeToRotate.parent;
@@ -190,7 +657,7 @@ function rotation_left(nodeToRotate, timeline, start_time) {
     return start_time
 }
 
-function rotation_right(nodeToRotate, timeline, start_time) {
+function zigzag(nodeToRotate, timeline, start_time) {
     console.log("right rotation");
     console.log(nodeToRotate)
     let destinationNode = nodeToRotate.parent;

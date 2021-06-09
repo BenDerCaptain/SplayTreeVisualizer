@@ -166,9 +166,6 @@ class SplayTree{
     rotate(type, node){
         switch (type){
             case "ZIG":
-                let is_left_child = (node.parent.leftChild === node)
-                if(is_left_child) start_time = rotation_right(node, timeline, start_time)
-                else start_time = rotation_left(node, timeline, start_time)
                 this.zig(node)
                 break;
             case "ZIGZIG":
@@ -220,13 +217,9 @@ class SplayTree{
         let is_left_child = (src.parent.leftChild === src)
 
         //zig parent and parent's parent
-        if(is_left_child) start_time = rotation_right(src.parent, timeline, start_time)
-        else start_time = rotation_left(src.parent, timeline, start_time)
         this.zig(src.parent)
 
         //zig src and parent
-        if(is_left_child) start_time = rotation_right(src, timeline, start_time)
-        else start_time = rotation_left(src, timeline, start_time)
         this.zig(src)
     }
 
@@ -234,13 +227,9 @@ class SplayTree{
         let is_left_child = (src.parent.leftChild === src)
 
         //zig src and parent
-        if(is_left_child) start_time = rotation_right(src, timeline, start_time)
-        else start_time = rotation_left(src, timeline, start_time)
         this.zig(src)
 
         //zig parent and parent's parent
-        if(is_left_child) start_time = rotation_left(src, timeline, start_time)
-        else start_time = rotation_right(src, timeline, start_time)
         this.zig(src)
     }
 

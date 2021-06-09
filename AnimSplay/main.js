@@ -85,6 +85,7 @@ function startAnimationPipeline(){
     //console.log("Step sourceNode")
     while(tree.getCommonAncestor(sourceNode,destinationNode) !== sourceNode){
         nextAnimationStep(sourceNode, commonAncestor)
+        return;
         //createSVGTree(tree)
     }
 
@@ -119,18 +120,18 @@ function animate(){
 
 }
 
-function nextAnimationStep(rootNode, targetNode){
+async function nextAnimationStep(rootNode, targetNode) {
     //console.log("nextStep")
 
     ////// Detect Step
     let step = tree.getNextRotationStep(rootNode, targetNode)
     console.log(step)
-    //stepAnimation(step, rootNode);
     ////// Log Step
     ////// Execute Step
-    if(step !== "DONE") tree.rotate(step,rootNode);
-    timeline.start()
-
+    if (step !== "DONE") {
+        stepAnimation(step, rootNode);
+        tree.rotate(step, rootNode);
+    }
 
 }
 
