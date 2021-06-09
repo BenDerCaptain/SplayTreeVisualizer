@@ -103,7 +103,7 @@ function stepAnimation(step, sourceNode) {
             }
             else {
                 start_time = rotation_left(sourceNode.parent, timeline, start_time)
-                rotation_left(sourceNode, timeline, start_time)
+                start_time = rotation_left(sourceNode, timeline, start_time)
             }
             break;
         case "ZIGZAG":
@@ -192,8 +192,9 @@ function rotation_left(nodeToRotate, timeline, start_time) {
 
 function rotation_right(nodeToRotate, timeline, start_time) {
     console.log("right rotation");
-
+    console.log(nodeToRotate)
     let destinationNode = nodeToRotate.parent;
+    console.log(destinationNode)
     let y_level = destinationNode.level()
 
     let idSource = "#node_" + nodeToRotate.value;

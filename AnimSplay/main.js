@@ -1,7 +1,8 @@
 let nodesToGenerate = 15;
 let tree;
-let animationSpeed = 1.0
+let animationSpeed = 1.0;
 let animationType;
+let rotation_data = [];
 
 function init(){
     initSVG(1000,1000);
@@ -60,8 +61,11 @@ function changeSpeed(){
     console.log("changeSpeed")
 }
 
-function startAnimation(){
+function startAnimationPipeline(){
     // TODO
+    // 1.rotate datasource
+    // 2.
+    //
     //Zig has a hard bug which deletes nodes from the tree on some rotations!!
     console.log("start animation")
 
@@ -84,7 +88,6 @@ function startAnimation(){
         //createSVGTree(tree)
     }
 
-    let sourceSmaller = SplayNode.greater(sourceNode,destinationNode);
     // Loop Until dest node child of source node
     //console.log("Step destinationNode")
     while(!tree.isChild(sourceNode,destinationNode)){
@@ -111,16 +114,23 @@ function startAnimation(){
 
 }
 
+function animate(){
+
+
+}
+
 function nextAnimationStep(rootNode, targetNode){
     //console.log("nextStep")
 
     ////// Detect Step
     let step = tree.getNextRotationStep(rootNode, targetNode)
     console.log(step)
-    stepAnimation(step, rootNode);
+    //stepAnimation(step, rootNode);
     ////// Log Step
     ////// Execute Step
     if(step !== "DONE") tree.rotate(step,rootNode);
+    timeline.start()
+
 
 }
 
@@ -153,5 +163,5 @@ function checkSelected(){
     $("#SourceText").text("Source : " + getSelectedSource())
     $("#DestinationText").text("Destination : " + getSelectedDestination())
 
-    if(animationType === "auto") startAnimation();
+    if(animationType === "auto") startAnimationPipeline();
 }
