@@ -86,7 +86,13 @@ function reset(){
 
 //Animation Start
 let timeline = new SVG.Timeline();
+let animation_speed = 1;
 var start_time = 0;
+
+function set_timeline_speed(new_speed){
+    animation_speed = new_speed
+    timeline.speed(animation_speed);
+}
 
 function stepAnimation(step, sourceNode) {
     console.log(step + "\ rotation")
@@ -126,6 +132,7 @@ function stepAnimation(step, sourceNode) {
 
 function finish_animation(){
     timeline = new SVG.Timeline()
+    timeline.speed(animation_speed);
     start_time = 0
 }
 

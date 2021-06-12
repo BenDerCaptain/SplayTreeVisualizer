@@ -6,4 +6,5 @@
 .svg-wrapper{
     height:750px;
     background-color:lightcoral;
+    overflow:scroll;
 }

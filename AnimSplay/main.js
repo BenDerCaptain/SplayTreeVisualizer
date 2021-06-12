@@ -61,8 +61,9 @@ function resetTree(){
 }
 
 function changeSpeed(){
-    //TODO
-    console.log("changeSpeed")
+    let speed = document.getElementById("animationSpeed").value;
+    speed = speed / 5;
+    set_timeline_speed(speed)
 }
 
 function startAnimationPipeline(){
