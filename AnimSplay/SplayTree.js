@@ -175,6 +175,9 @@ class SplayTree{
                 this.zigzag(node)
                 break;
         }
+        console.log("fire rotation_finished event")
+        const rotation_finished_event = new Event('rotation_finished');
+        dispatchEvent(rotation_finished_event)
     }
 
     depth(){
@@ -234,7 +237,9 @@ class SplayTree{
     }
 
     printOut(){
+        console.log("------------FULL TREE PRINTOUT------------")
         SplayNode.print(this.root, 0);
+        console.log("------------------------------------------")
     }
 
 

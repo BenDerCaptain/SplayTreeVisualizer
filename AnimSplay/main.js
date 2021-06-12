@@ -2,11 +2,15 @@ let nodesToGenerate = 15;
 let tree;
 let animationSpeed = 1.0;
 let animationType;
-let rotation_data = [];
+let current_rotation_log = [];
+let all_rotations_log=[]
 
 function init(){
     initSVG(1000,1000);
     updateNavbarButtons();
+
+    addEventListener('rotation_finished', this.rotation_finished_handler)
+    addEventListener('animation_finished', this.animation_finished_handler)
 
     test1()
     //test2()
@@ -62,42 +66,28 @@ function changeSpeed(){
 }
 
 function startAnimationPipeline(){
-    // TODO
-    // 1.rotate datasource
-    // 2.
-    //
-    //Zig has a hard bug which deletes nodes from the tree on some rotations!!
     console.log("start animation")
 
     //Get nodes from selected
     let sourceNode = tree.getNodeByValue(parseInt(getSelectedSource()))
     let destinationNode = tree.getNodeByValue(parseInt(getSelectedDestination()))
 
-    //console.log(sourceNode)
-    //console.log(destinationNode)
 
     // Detect Common ancestor
     // Mark Common ancestor
     let commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode)
-    //console.log(commonAncestor)
 
     // Loop Until source node in ancestor spot
-    //console.log("Step sourceNode")
-    while(tree.getCommonAncestor(sourceNode,destinationNode) !== sourceNode){
+    if(commonAncestor !== sourceNode)
         nextAnimationStep(sourceNode, commonAncestor)
-        return;
-        //createSVGTree(tree)
-    }
+
 
     // Loop Until dest node child of source node
-    //console.log("Step destinationNode")
-    while(!tree.isChild(sourceNode,destinationNode)){
-        if(SplayNode.greater(sourceNode, destinationNode)){
+    else if(!tree.isChild(sourceNode,destinationNode)){
+        if(SplayNode.greater(sourceNode, destinationNode))
             nextAnimationStep(destinationNode, sourceNode.leftChild)
-        }else if(SplayNode.greater(destinationNode, sourceNode)){
+        else if(SplayNode.greater(destinationNode, sourceNode))
             nextAnimationStep(destinationNode, sourceNode.rightChild)
-        }
-        //createSVGTree(tree)
     }
 
     //Finished message
@@ -109,8 +99,8 @@ function startAnimationPipeline(){
     //createSVGTree(tree)
 
 
-    console.log("fin animation")
-    finish_animation()
+    //console.log("fin animation")
+    //finish_animation()
     //tree.printOut()
 
 }
@@ -120,7 +110,7 @@ function animate(){
 
 }
 
-async function nextAnimationStep(rootNode, targetNode) {
+function nextAnimationStep(rootNode, targetNode) {
     //console.log("nextStep")
 
     ////// Detect Step
@@ -133,6 +123,31 @@ async function nextAnimationStep(rootNode, targetNode) {
         tree.rotate(step, rootNode);
     }
 
+}
+
+let anim_finished = false;
+let rot_finished = false;
+
+function animation_finished_handler(){
+    anim_finished = true;
+    recreate_Connectors();
+}
+
+function rotation_finished_handler(){
+    rot_finished = true;
+    tree.printOut();
+    recreate_Connectors();
+
+}
+
+function recreate_Connectors(){
+    if(anim_finished && rot_finished){
+        rot_finished = false;
+        anim_finished = false;
+        finish_animation()
+        if(animationType === "auto" || animationType === "flow")
+            startAnimationPipeline()
+    }
 }
 
 function updateNavbarButtons(){
