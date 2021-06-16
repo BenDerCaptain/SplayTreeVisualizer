@@ -8,3 +8,7 @@
     background-color:lightcoral;
     overflow:scroll;
 }
+
+.list-group-numbered > li::before {
+    content: attr(value) ". ";
+}

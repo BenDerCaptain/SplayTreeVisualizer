@@ -31,7 +31,8 @@
                 </div>
                 <div class=" m-2 align-self-center d-flex">
                     <button class="btn btn-outline-success me-2" id="saveTree" onclick="saveTree()">Save</button>
-                    <button class="btn btn-outline-success me-2" id="loadTree" onclick="loadTree()">Load</button>
+                    <button class="btn btn-outline-success me-2" id="loadTree" onclick="loadTree_click()">Load</button>
+                    <input style="display: none" type="file" name="treeFile" id="uploadFileName" accept="application/json,.json" onchange="handleFileUpload()"/>
                 </div>
                 <div class="  m-2 align-self-center">
                     <div>
@@ -54,8 +55,8 @@
                     </div>
                 </div>
                 <div class=" m-2 align-self-center">
-                    <button class="btn btn-outline-success me-2" id="startAnimation" onclick="startAnimationPipeline()">StartAnimation</button>
-                    <button class="btn btn-outline-success me-2" id="stepAnimation" onclick="nextAnimationStep()">StepAnimation</button>
+                    <button class="btn btn-outline-success me-2" id="startAnimation" onclick="startAnimation()">StartAnimation</button>
+                    <button class="btn btn-outline-success me-2" id="stepAnimation" onclick="startAnimationPipeline()">StepAnimation</button>
                 </div>
                 <div class="m-2 align-self-center">
                     <div id="SourceText" class="text-nowrap">Source: ???</div>
@@ -70,16 +71,16 @@
     <div id="logs" class="row">
         <div class="col">
             <div id="animationHist border" class="overflow-auto logContainer w-100">
-                <ol reversed class="list-group list-group-numbered w-100" >
-                    <li class="list-group-item">
-                        <b>HI</b>
-                    </li>
+                <ol id="rotationStepList" class="list-group list-group-numbered w-100">
+
                 </ol>
             </div>
         </div>
         <div class="col">
             <div id="communicationHist border" class="overflow-auto logContainer">
-                <li class="list-group-item">NodeA NodeB</li>
+                <ol id="communicationsList" class="list-group list-group-numbered w-100">
+
+                </ol>
             </div>
         </div>
     </div>
