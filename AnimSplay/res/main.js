@@ -40,13 +40,28 @@ function generateTree(){
     if (nodesToGenerate < 0)
         return;
 
+    redrawTree()
+}
+
+function redrawTree(){
+    clearLogs()
+    finish_animation()
     tree = new SplayTree(nodesToGenerate);
     createSVGTree(tree)
 }
 
-function saveTree(){
+function clearLogs(){
 
-    console.log("save")
+    communications = [];
+    communications_log = [];
+    rotations_log = [];
+
+    updateLog(communications_log, "communicationsList");
+    updateLog(rotations_log, "rotationStepList");
+
+}
+
+function saveTree(){
 
     let a = document.createElement("a")
 
@@ -95,8 +110,6 @@ function loadTreeStatusFromFileData(data){
     communications.forEach(function(item){
         sourceNode = tree.getNodeByValue(parseInt(item["source"]))
         destinationNode = tree.getNodeByValue(parseInt(item["destination"]))
-        console.log(sourceNode)
-        console.log(destinationNode)
         while(commonAncestor !== sourceNode){
             commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode)
             console.log(commonAncestor)
@@ -128,14 +141,6 @@ function loadTreeStatusFromFileData(data){
 }
 
 
-function resetTree(){
-
-    finish_animation()
-    tree = new SplayTree(nodesToGenerate);
-    //console.log(nodesToGenerate)
-    createSVGTree(tree)
-}
-
 function changeSpeed(){
     let speed = document.getElementById("animationSpeed").value;
     animationSpeed = speed / 5;
@@ -144,7 +149,8 @@ function changeSpeed(){
 
 let sourceNode;
 let destinationNode;
-let commonAncestor
+let commonAncestor;
+
 function startAnimation(){
     rotations_log = []
     rotations_log.push("Start Animation")
@@ -178,41 +184,21 @@ function startAnimationPipeline(){
         else if(SplayNode.greater(destinationNode, sourceNode))
             nextAnimationStep(destinationNode, sourceNode.rightChild)
     }
+
     else {
         //fire done event
         createSVGTree(tree)
         communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
-        console.log(communications)
         communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
-        console.log(communications_log)
         updateLog(communications_log, "communicationsList");
     }
 
-    //Finished message
-    //Unmark common ancestor
-    //Unselect selected Nodes
-    //Log communication
-
-    //Redraw <- Only for no animation!
-    //createSVGTree(tree)
-
-
-    //console.log("fin animation")
-    //finish_animation()
-    //tree.printOut()
-
 }
 
-
-
 function nextAnimationStep(rootNode, targetNode) {
-    //console.log("nextStep")
-    console.log(rootNode)
-    console.log(targetNode)
     ////// Detect Step
     let step = tree.getNextRotationStep(rootNode, targetNode)
     ////// Log Step
-    console.log(step)
     rotations_log.push("Execute " + step + " on Node " + rootNode.value)
     updateLog(rotations_log, "rotationStepList")
     ////// Execute Step
@@ -233,7 +219,6 @@ function animation_finished_handler(){
 
 function rotation_finished_handler(){
     rot_finished = true;
-    //tree.printOut();
     recreate_Connectors();
 
 }
@@ -264,20 +249,24 @@ function updateNavbarButtons(){
             $("#stepAnimation").css('display', "none")
             break;
     }
+    reset()
+    $("#SourceText").text("Source : " + getSelectedSource())
+    $("#DestinationText").text("Destination : " + getSelectedDestination())
 }
 
-
-function checkSelected(){
-
-    if(getSelectedSource() === -1 || getSelectedDestination() === -1){
+function checkSelected(event){
+    if(event.button !== 0) return;
+    let valid = true;
+    if(getSelectedSource() === "-" || getSelectedDestination() === "-"){
         //console.log("node-value")
         reset()
+        valid = false;
     }
 
     $("#SourceText").text("Source : " + getSelectedSource())
     $("#DestinationText").text("Destination : " + getSelectedDestination())
 
-    if(animationType === "auto") startAnimation();
+    if(valid && animationType === "auto") startAnimation();
 }
 
 function updateLog(log, ordered_list){

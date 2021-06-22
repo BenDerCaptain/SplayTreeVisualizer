@@ -74,8 +74,8 @@ function selectDestination(){
 }
 
 function reset(){
-    SelectedSource = -1
-    SelectedDestination = -1
+    SelectedSource = "-"
+    SelectedDestination = "-"
 }
 
 //Animation Start
@@ -117,7 +117,6 @@ function stepAnimation(step, sourceNode) {
             break;
     }
 
-    console.log("fire animation_finished event");
     const animation_finished_event = new Event('animation_finished');
     let done_runner = new SVG.Runner()
     done_runner.timeline(timeline)

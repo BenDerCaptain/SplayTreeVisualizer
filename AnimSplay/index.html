@@ -8,7 +8,7 @@
             border: 1px solid black;
         }
     </style>
-    <link href="Menu.css" rel="stylesheet"/>
+    <link href="./res/Menu.css" rel="stylesheet"/>
     <link href="./res/bootstrap/bootstrap.min.css" rel="stylesheet">
     <script type="text/javascript" src="./res/svgdotjs/svg.js"></script>
     <script type="text/javascript" src="./res/svgdotjs/svg.panzoom.js"></script>
@@ -31,7 +31,7 @@
                 <div class=" d-inline-flex m-2 align-self-center">
                     <input class="form-control me-2" placeholder="15" type="number" id="nodeCount"/>
                     <button class="btn btn-outline-success me-2" type="button" id="generateTree" onclick="generateTree()">Generate</button>
-                    <button class="btn btn-outline-success me-2 text-nowrap" id="resetTree" onclick="resetTree()">Reset Tree</button>
+                    <button class="btn btn-outline-success me-2 text-nowrap" id="redrawTree" onclick="redrawTree()">Reset Tree</button>
                 </div>
                 <div class="m-2 align-self-center d-flex">
                     <button class="btn btn-outline-success me-2" id="saveTree" onclick="saveTree()">Save</button>
@@ -63,8 +63,8 @@
                     <button class="btn btn-outline-success me-2" id="stepAnimation" onclick="startAnimationPipeline()">StepAnimation</button>
                 </div>
                 <div class="m-2 align-self-center">
-                    <div id="SourceText" class="text-nowrap">Source: ???</div>
-                    <div id="DestinationText" class="text-nowrap">Destination: ???</div>
+                    <div id="SourceText" class="text-nowrap">Source: -</div>
+                    <div id="DestinationText" class="text-nowrap">Destination: -</div>
                 </div>
             </div>
         </div>
@@ -91,7 +91,7 @@
 
     <hr>
 
-    <div id="SVGContainer" class="svg-wrapper border d-flex" onmouseup="checkSelected()">
+    <div id="SVGContainer" class="svg-wrapper border d-flex" onmouseup="checkSelected(event)">
 
     </div>
 </div>

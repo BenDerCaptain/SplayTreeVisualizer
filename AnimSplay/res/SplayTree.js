@@ -175,7 +175,7 @@ class SplayTree{
                 this.zigzag(node)
                 break;
         }
-        console.log("fire rotation_finished event")
+
         const rotation_finished_event = new Event('rotation_finished');
         dispatchEvent(rotation_finished_event)
     }
