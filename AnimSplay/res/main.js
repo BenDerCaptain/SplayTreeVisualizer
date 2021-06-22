@@ -7,7 +7,7 @@ let communications_log = [];
 let rotations_log = [];
 
 function init(){
-    initSVG(1000,1000);
+    initSVG(500,1000);
     updateNavbarButtons();
 
     addEventListener('rotation_finished', this.rotation_finished_handler)

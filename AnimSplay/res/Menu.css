@@ -4,9 +4,8 @@
 }
 
 .svg-wrapper{
-    height:750px;
+    height:auto;
     background-color:lightcoral;
-    overflow:scroll;
 }
 
 .list-group-numbered > li::before {

@@ -8,43 +8,37 @@ let MARGIN_TOP = 20;
 let SelectedSource = -1;
 let SelectedDestination = -1;
 
-//do viewbox zooming!
-//do viewbox panning!
-
 function initSVG(heightVal, widthVal){
     width = widthVal;
     height = heightVal;
-    let svg = SVG().addTo('#SVGContainer');
+    let svg = SVG().addTo('#SVGContainer').panZoom({panButton: 1});
     draw = svg.viewbox(0, 0, width, height)
 }
 
 function createSVGTree(splayTree){
     draw.clear()
-
     let lineGroup = draw.group().id("lineGroup")
     let nodeGroup = draw.group().id("nodeGroup")
     let textGroup = draw.group().id("textGroup")
-    buildNodes(nodeGroup, textGroup, lineGroup, width/2, width/2, 0, splayTree.root)
+    buildNodes(nodeGroup, textGroup, lineGroup, width/2.0, width/2.0, 0, splayTree.root)
 }
 
 function buildNodes(nodeGroup, textGroup, lineGroup, xposition, halfwidth, ylevel, node){
     let circle = nodeGroup
         .circle(CIRCLE_DIAMETER)
-        .move(xposition-CIRCLE_RADIUS, ylevel*CIRCLE_DIAMETER*5+(MARGIN_TOP-CIRCLE_RADIUS))
+        .center(xposition, ylevel*CIRCLE_DIAMETER*5+(MARGIN_TOP))
         .id("node_"+node.value.toString())
-
-    circle.attr("node-value", node.value.toString())
-    circle.fill('#00278B')
-    circle.on('mousedown', selectSource)
-    circle.on('mouseup', selectDestination)
+        .attr("node-value", node.value.toString())
+        .fill('#00278B')
+        .on('mousedown', selectSource)
+        .on('mouseup', selectDestination)
 
     let text = textGroup
         .text(node.value.toString())
-        .move(xposition, ylevel*CIRCLE_DIAMETER*5+(MARGIN_TOP-CIRCLE_RADIUS))
+        .font({fill: '#fff', family: 'Calibri', size: 15 })
+        .center(xposition, ylevel*CIRCLE_DIAMETER*5+(MARGIN_TOP))
         .id("node_"+node.value.toString()+"_text")
         .css("pointer-events", "none")
-
-    text.font({anchor: 'middle', fill: '#fff', family: 'Calibri', size: 15 })
 
     if(node.leftChild !== null){
         let line = lineGroup
@@ -743,7 +737,9 @@ function zagzig(nodeToRotate, timeline, start_time) {
 
     //2.7 move B to p.right (up)
     upNode = sourceNode.leftChild;
-    start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 2, left_child_xpos, "right")
+    moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 2, left_child_xpos, "right")
+
+    start_time += 1000
 
     //3. Redraw lines (FIN)
     return start_time;
@@ -901,7 +897,9 @@ function zigzag(nodeToRotate, timeline, start_time) {
 
     //2.7 move C to p.left (up)
     upNode = sourceNode.rightChild;
-    start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 2, left_child_xpos, "left")
+    moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 2, left_child_xpos, "left")
+
+    start_time += 1000
 
     //3. Redraw lines (FIN)
     return start_time;
