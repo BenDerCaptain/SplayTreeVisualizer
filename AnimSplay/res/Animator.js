@@ -955,8 +955,18 @@ function moveTo(circle, text, timeline, start_time, pos_x, pos_y){
     circle.timeline(timeline)
     text.timeline(timeline)
 
-    circle.animate(1000, start_time, "absolute" ).center(pos_x, pos_y);
-    text.animate(1000, start_time, "absolute" ).center(pos_x, pos_y);
+    //One frame change size => change size before movement
+    circle.animate(1, start_time, "absolute").size(22).fill('#6c92ff')
+    circle.stroke('#0a0f15')
+    circle.attr({strokeWidth:'4'})
+
+    //move circle => most frames for movement
+    circle.animate(998, start_time+1, "absolute" ).center(pos_x, pos_y);
+    text.animate(998, start_time+1, "absolute" ).center(pos_x, pos_y);
+
+    //One frame change size
+    circle.animate(1, start_time+999, "absolute").size(20).fill('#00278B')
+    circle.attr({strokeWidth:'0'})
 
     return start_time+1000
 
