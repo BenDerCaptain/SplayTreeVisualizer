@@ -20,40 +20,53 @@ function createSVGTree(splayTree){
     let lineGroup = draw.group().id("lineGroup")
     let nodeGroup = draw.group().id("nodeGroup")
     let textGroup = draw.group().id("textGroup")
-    buildNodes(nodeGroup, textGroup, lineGroup, width/2.0, width/2.0, 0, splayTree.root)
+    build_nodes(nodeGroup, textGroup, width/2.0, width/2.0, 0, splayTree.root)
+    create_lines(lineGroup, width/2.0, width/2.0, 0, splayTree.root)
 }
 
-function buildNodes(nodeGroup, textGroup, lineGroup, xposition, halfwidth, ylevel, node){
+function build_nodes(nodeGroup, textGroup, x_position, half_width, y_level, node){
     let circle = nodeGroup
         .circle(CIRCLE_DIAMETER)
-        .center(xposition, ylevel*CIRCLE_DIAMETER*5+(MARGIN_TOP))
+        .center(x_position, y_level*CIRCLE_DIAMETER*5+(MARGIN_TOP))
         .id("node_"+node.value.toString())
         .attr("node-value", node.value.toString())
         .fill('#00278B')
         .on('mousedown', selectSource)
         .on('mouseup', selectDestination)
+    circle.stroke('#0a0f15')
+    circle.attr("stroke-width",0)
 
     let text = textGroup
         .text(node.value.toString())
         .font({fill: '#fff', family: 'Calibri', size: 15 })
-        .center(xposition, ylevel*CIRCLE_DIAMETER*5+(MARGIN_TOP))
+        .center(x_position, y_level*CIRCLE_DIAMETER*5+(MARGIN_TOP))
         .id("node_"+node.value.toString()+"_text")
         .css("pointer-events", "none")
 
+    if(node.leftChild !== null)
+        build_nodes(nodeGroup, textGroup, x_position - (half_width/2.), half_width/2., y_level+1, node.leftChild);
+
+
+    if(node.rightChild !== null)
+        build_nodes(nodeGroup, textGroup, x_position + (half_width/2.), half_width/2., y_level+1, node.rightChild);
+
+}
+
+function create_lines(lineGroup, x_position, half_width, y_level, node){
     if(node.leftChild !== null){
         let line = lineGroup
-            .line(xposition, ylevel*CIRCLE_DIAMETER*5+MARGIN_TOP, xposition - (halfwidth/2.), (ylevel+1)*CIRCLE_DIAMETER*5+MARGIN_TOP)
+            .line(x_position, y_level*CIRCLE_DIAMETER*5+MARGIN_TOP, x_position - (half_width/2.), (y_level+1)*CIRCLE_DIAMETER*5+MARGIN_TOP)
             .id("connector_"+node.value.toString()+"_"+node.leftChild.value.toString())
         line.stroke({ color: 'lightgrey', width: 3})
-        buildNodes(nodeGroup, textGroup, lineGroup, xposition - (halfwidth/2.), halfwidth/2., ylevel+1, node.leftChild);
+        create_lines(lineGroup, x_position - (half_width/2.), half_width/2., y_level+1, node.leftChild);
     }
 
     if(node.rightChild !== null){
         let line = lineGroup
-            .line(xposition, ylevel*CIRCLE_DIAMETER*5+MARGIN_TOP, xposition + (halfwidth/2.), (ylevel+1)*CIRCLE_DIAMETER*5+MARGIN_TOP)
+            .line(x_position, y_level*CIRCLE_DIAMETER*5+MARGIN_TOP, x_position + (half_width/2.), (y_level+1)*CIRCLE_DIAMETER*5+MARGIN_TOP)
             .id("connector_"+node.value.toString()+"_"+node.rightChild.value.toString())
         line.stroke({ color: 'lightgrey', width: 3})
-        buildNodes(nodeGroup, textGroup, lineGroup, xposition + (halfwidth/2.), halfwidth/2., ylevel+1, node.rightChild);
+        create_lines(lineGroup, x_position + (half_width/2.), half_width/2., y_level+1, node.rightChild);
     }
 }
 
@@ -81,7 +94,7 @@ function reset(){
 //Animation Start
 let timeline = new SVG.Timeline();
 let animation_speed = 1;
-var start_time = 0;
+let start_time = 0;
 
 function set_timeline_speed(new_speed){
     animation_speed = new_speed
@@ -89,7 +102,7 @@ function set_timeline_speed(new_speed){
 }
 
 function stepAnimation(step, sourceNode) {
-    console.log(step + "\ rotation")
+    console.log(step + " rotation")
     //setup timeline
 
     let is_left_child = (sourceNode.parent.leftChild === sourceNode)
@@ -118,10 +131,63 @@ function stepAnimation(step, sourceNode) {
     }
 
     const animation_finished_event = new Event('animation_finished');
-    let done_runner = new SVG.Runner()
-    done_runner.timeline(timeline)
-    done_runner.animate(1, start_time, "absolute").after(function (){dispatchEvent(animation_finished_event)})
+    let done_runner = new SVG.Runner();
+    done_runner.timeline(timeline);
+    done_runner.animate(1, start_time, "absolute")
+        .after(function (){
+            dispatchEvent(animation_finished_event)
+        });
 }
+
+function remove_and_build_lines(tree){
+
+    remove_lines(tree)
+
+}
+
+function remove_lines(tree){
+    // animate old lines remove
+    let lines_group_node = SVG("#lineGroup");
+
+    lines_group_node.timeline(timeline);
+
+    //One frame change size => change size before movement
+    lines_group_node.animate(500, start_time, "absolute").opacity(0);
+
+    start_time = start_time + 500;
+
+    // remove old lines
+    let done_runner = new SVG.Runner();
+    done_runner.timeline(timeline);
+    done_runner.animate(1, start_time, "absolute")
+        .after(function (){
+            lines_group_node.children().forEach(child => child.remove())
+            build_lines(lines_group_node, tree)
+        });
+}
+
+function build_lines(lines_group_node, tree){
+    // build new lines
+    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root)
+
+    //One frame change size => change size before movement
+    lines_group_node.animate(500, start_time, "absolute").opacity(1);
+
+    start_time = start_time + 500;
+
+    // remove old lines
+    let done_runner = new SVG.Runner();
+    const line_redraw_finished_event = new Event('line_redraw_finished');
+    done_runner.timeline(timeline);
+    done_runner.animate(1, start_time, "absolute")
+        .after(function (){
+            dispatchEvent(line_redraw_finished_event)
+        });
+    // animate new lines fade-in
+
+}
+
+
 
 function finish_animation(){
     timeline = new SVG.Timeline()
@@ -956,17 +1022,14 @@ function moveTo(circle, text, timeline, start_time, pos_x, pos_y){
     text.timeline(timeline)
 
     //One frame change size => change size before movement
-    circle.animate(1, start_time, "absolute").size(22).fill('#6c92ff')
-    circle.stroke('#0a0f15')
-    circle.attr({strokeWidth:'4'})
+    circle.animate(1, start_time, "absolute").size(22).attr({fill: '#6c92ff', "stroke-width": 1})
 
     //move circle => most frames for movement
     circle.animate(998, start_time+1, "absolute" ).center(pos_x, pos_y);
     text.animate(998, start_time+1, "absolute" ).center(pos_x, pos_y);
 
     //One frame change size
-    circle.animate(1, start_time+999, "absolute").size(20).fill('#00278B')
-    circle.attr({strokeWidth:'0'})
+    circle.animate(1, start_time+999, "absolute").size(20).attr({fill: '#00278B', 'stroke-width': 0})
 
     return start_time+1000
 

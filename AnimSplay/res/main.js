@@ -12,9 +12,11 @@ function init(){
 
     addEventListener('rotation_finished', this.rotation_finished_handler)
     addEventListener('animation_finished', this.animation_finished_handler)
+    addEventListener('line_redraw_finished', this.connector_redraw_finished_handler)
 
     test1()
     //test2()
+    //test3()
 
 }
 
@@ -29,6 +31,10 @@ function test2(){
     SelectedDestination = 4;
     animationType = "auto"
     checkSelected()
+}
+
+function test3(){
+    remove_and_build_lines(tree)
 }
 
 function generateTree(){
@@ -187,10 +193,7 @@ function startAnimationPipeline(){
 
     else {
         //fire done event
-        createSVGTree(tree)
-        communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
-        communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
-        updateLog(communications_log, "communicationsList");
+        remove_and_build_lines(tree)
     }
 
 }
@@ -214,16 +217,16 @@ let rot_finished = false;
 
 function animation_finished_handler(){
     anim_finished = true;
-    recreate_Connectors();
+    nextStep_Rotation();
 }
 
 function rotation_finished_handler(){
     rot_finished = true;
-    recreate_Connectors();
+    nextStep_Rotation();
 
 }
 
-function recreate_Connectors(){
+function nextStep_Rotation(){
     if(anim_finished && rot_finished){
         rot_finished = false;
         anim_finished = false;
@@ -231,6 +234,13 @@ function recreate_Connectors(){
         if(animationType === "auto" || animationType === "flow")
             startAnimationPipeline()
     }
+}
+
+function connector_redraw_finished_handler(){
+    //createSVGTree(tree)
+    communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
+    communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
+    updateLog(communications_log, "communicationsList");
 }
 
 function updateNavbarButtons(){
