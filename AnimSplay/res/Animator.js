@@ -32,7 +32,9 @@ function build_nodes(nodeGroup, textGroup, x_position, half_width, y_level, node
         .attr("node-value", node.value.toString())
         .fill('#00278B')
         .on('mousedown', selectSource)
-        .on('mouseup', selectDestination);
+        .on('mouseup', selectDestination)
+        .on('mouseover', mouseOver)
+        .on('mouseout', mouseOut);
     circle.stroke('#0a0f15');
     circle.attr("stroke-width",0);
 
@@ -84,6 +86,35 @@ function selectSource(){
 
 function selectDestination(){
     SelectedDestination = this.attr("node-value");
+}
+
+function disableNodeMouseEvents(){
+    let nodeGroup = SVG("#nodeGroup");
+    nodeGroup.children().forEach(child => child.css("pointer-events", "none"));
+}
+
+function enableNodeMouseEvents(){
+    let nodeGroup = SVG("#nodeGroup");
+    nodeGroup.children().forEach(child => child.css("pointer-events", "visiblePainted"));
+}
+
+function mouseOver(){
+    this.fill("#ea1212");
+    this.size(25);
+
+    let node_value = this.attr("node-value")
+    let hovered_text = SVG("#node_"+node_value+"_text")
+    hovered_text.font({weight:"bold", fill:"#ffffff"});
+
+}
+
+function mouseOut(){
+    this.fill("#00278B");
+    this.size(20);
+
+    let node_value = this.attr("node-value")
+    let hovered_text = SVG("#node_"+node_value+"_text")
+    hovered_text.font({weight:"normal", fill:"#ffffff"});
 }
 
 function reset(){

@@ -165,7 +165,7 @@ function startAnimation(){
     let sourceValue = getSelectedSource();
     let destinationValue = getSelectedDestination();
 
-    if(sourceValue === '-' || destinationValue === '-')
+    if(sourceValue === '-' || destinationValue === '-' || sourceValue === destinationValue)
         return;
 
     //Get nodes from selected
@@ -185,6 +185,8 @@ function startAnimation(){
         switchAnimationButton();
     switchNavbarElements(true);
 
+    disableNodeMouseEvents();
+
     startAnimationPipeline();
 }
 
@@ -202,6 +204,14 @@ function switchAnimationButton(){
 
 }
 
+function disableStepAnimationButton() {
+    $("#stepAnimation").prop("disabled", true);
+}
+
+function enableStepAnimationButton() {
+    $("#stepAnimation").prop("disabled", false);
+}
+
 function switchNavbarElements(disable){
     $("#nodeCount").prop( "disabled", disable );
     $("#generateTree").prop( "disabled", disable );
@@ -214,6 +224,7 @@ function switchNavbarElements(disable){
 
 
 function startAnimationPipeline(){
+    disableStepAnimationButton();
 
     commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
     // Loop Until source node in ancestor spot
@@ -271,6 +282,8 @@ function nextStep_Rotation(){
         finish_animation();
         if(animationType === "auto" || animationType === "flow")
             startAnimationPipeline();
+        else
+            enableStepAnimationButton();
     }
 }
 
@@ -283,6 +296,8 @@ function connector_redraw_finished_handler(){
     if(animationType === "step")
         switchAnimationButton();
     switchNavbarElements(false);
+
+    enableNodeMouseEvents();
 
 }
 
