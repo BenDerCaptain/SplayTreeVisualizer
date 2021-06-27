@@ -5,16 +5,17 @@ let animationType;
 let communications = [];
 let communications_log = [];
 let rotations_log = [];
+let animation_running = false;
 
 function init(){
     initSVG(500,1000);
     updateNavbarButtons();
 
-    addEventListener('rotation_finished', this.rotation_finished_handler)
-    addEventListener('animation_finished', this.animation_finished_handler)
-    addEventListener('line_redraw_finished', this.connector_redraw_finished_handler)
+    addEventListener('rotation_finished', this.rotation_finished_handler);
+    addEventListener('animation_finished', this.animation_finished_handler);
+    addEventListener('line_redraw_finished', this.connector_redraw_finished_handler);
 
-    test1()
+    test1();
     //test2()
     //test3()
 
@@ -22,19 +23,19 @@ function init(){
 
 function test1(){
     tree = new SplayTree(15);
-    createSVGTree(tree)
+    createSVGTree(tree);
 }
 
 function test2(){
-    set_timeline_speed(10)
+    set_timeline_speed(10);
     SelectedSource = 6;
     SelectedDestination = 4;
-    animationType = "auto"
-    checkSelected()
+    animationType = "auto";
+    checkSelected();
 }
 
 function test3(){
-    remove_and_build_lines(tree)
+    remove_and_build_lines(tree);
 }
 
 function generateTree(){
@@ -46,14 +47,14 @@ function generateTree(){
     if (nodesToGenerate < 0)
         return;
 
-    redrawTree()
+    redrawTree();
 }
 
 function redrawTree(){
-    clearLogs()
-    finish_animation()
+    clearLogs();
+    finish_animation();
     tree = new SplayTree(nodesToGenerate);
-    createSVGTree(tree)
+    createSVGTree(tree);
 }
 
 function clearLogs(){
@@ -69,17 +70,17 @@ function clearLogs(){
 
 function saveTree(){
 
-    let a = document.createElement("a")
+    let a = document.createElement("a");
 
     let jsonObject = {
         "tree_size": nodesToGenerate,
         "communications": communications
     }
     let blob = new Blob([JSON.stringify(jsonObject)], {type: "application/json;charset=utf-8"});
-    a.href = URL.createObjectURL(blob)
-    a.download = "tree.json"
-    a.target = "_blank"
-    a.click()
+    a.href = URL.createObjectURL(blob);
+    a.download = "tree.json";
+    a.target = "_blank";
+    a.click();
 
 }
 
@@ -88,7 +89,7 @@ function loadTree_click(){
 }
 
 function handleFileUpload(){
-    let file = document.getElementById("uploadFileName").files[0]
+    let file = document.getElementById("uploadFileName").files[0];
 
     if (!file.type.startsWith('application/json')) return;
 
@@ -98,29 +99,29 @@ function handleFileUpload(){
     fr.onload = function (obj){
         let treeData = JSON.parse(obj.target.result);
         if(!treeData.hasOwnProperty('tree_size') || !treeData.hasOwnProperty('communications')) return;
-        loadTreeStatusFromFileData(treeData)
+        loadTreeStatusFromFileData(treeData);
     }
 
     fr.readAsText(file);
 }
 
 function loadTreeStatusFromFileData(data){
-    communications_log = []
-    rotations_log = []
-    communications = []
+    communications_log = [];
+    rotations_log = [];
+    communications = [];
 
-    nodesToGenerate = data["tree_size"]
+    nodesToGenerate = data["tree_size"];
     tree = new SplayTree(nodesToGenerate);
 
-    communications = data["communications"]
+    communications = data["communications"];
     communications.forEach(function(item){
-        sourceNode = tree.getNodeByValue(parseInt(item["source"]))
-        destinationNode = tree.getNodeByValue(parseInt(item["destination"]))
+        sourceNode = tree.getNodeByValue(parseInt(item["source"]));
+        destinationNode = tree.getNodeByValue(parseInt(item["destination"]));
         while(commonAncestor !== sourceNode){
-            commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode)
-            console.log(commonAncestor)
+            commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
+            console.log(commonAncestor);
             ////// Detect Step
-            let step = tree.getNextRotationStep(sourceNode, commonAncestor)
+            let step = tree.getNextRotationStep(sourceNode, commonAncestor);
             ////// Execute Step
             if (step !== "DONE") {
                 tree.rotate(step, sourceNode);
@@ -129,10 +130,10 @@ function loadTreeStatusFromFileData(data){
         // Loop Until dest node child of source node
         while(!tree.isChild(sourceNode,destinationNode)){
             if(SplayNode.greater(sourceNode, destinationNode)){
-                let step = tree.getNextRotationStep(destinationNode, sourceNode.leftChild)
+                let step = tree.getNextRotationStep(destinationNode, sourceNode.leftChild);
                 tree.rotate(step, destinationNode);
             } else if(SplayNode.greater(destinationNode, sourceNode)){
-                let step = tree.getNextRotationStep(destinationNode, sourceNode.rightChild)
+                let step = tree.getNextRotationStep(destinationNode, sourceNode.rightChild);
                 tree.rotate(step, destinationNode);
             }
         }
@@ -142,15 +143,15 @@ function loadTreeStatusFromFileData(data){
         communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
 
     })
-    updateLog(communications_log, "communicationsList")
-    createSVGTree(tree)
+    updateLog(communications_log, "communicationsList");
+    createSVGTree(tree);
 }
 
 
 function changeSpeed(){
     let speed = document.getElementById("animationSpeed").value;
     animationSpeed = speed / 5;
-    set_timeline_speed(animationSpeed)
+    set_timeline_speed(animationSpeed);
 }
 
 let sourceNode;
@@ -158,52 +159,89 @@ let destinationNode;
 let commonAncestor;
 
 function startAnimation(){
-    rotations_log = []
-    rotations_log.push("Start Animation")
+    rotations_log = [];
+    rotations_log.push("Start Animation");
+
+    let sourceValue = getSelectedSource();
+    let destinationValue = getSelectedDestination();
+
+    if(sourceValue === '-' || destinationValue === '-')
+        return;
 
     //Get nodes from selected
-    sourceNode = tree.getNodeByValue(parseInt(getSelectedSource()))
-    destinationNode = tree.getNodeByValue(parseInt(getSelectedDestination()))
-    rotations_log.push("Detect Selected Route: "+ sourceNode.value +" -> " + destinationNode.value)
+    sourceNode = tree.getNodeByValue(parseInt(sourceValue));
+    destinationNode = tree.getNodeByValue(parseInt(destinationValue));
+    rotations_log.push("Detect Selected Route: "+ sourceNode.value +" -> " + destinationNode.value);
 
     // Detect Common ancestor
     // Mark Common ancestor
-    commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode)
-    rotations_log.push("Detect Common Ancestor: " + commonAncestor.value)
-    updateLog(rotations_log, "rotationStepList")
+    commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
+    rotations_log.push("Detect Common Ancestor: " + commonAncestor.value);
+    updateLog(rotations_log, "rotationStepList");
 
-    startAnimationPipeline()
+    animation_running = true;
+
+    if(animationType === "step")
+        switchAnimationButton();
+    switchNavbarElements(true);
+
+    startAnimationPipeline();
 }
+
+function switchAnimationButton(){
+
+    let startButton_display = $("#startAnimation").css('display');
+
+    if(startButton_display === "block"){
+        $("#startAnimation").css('display',"none");
+        $("#stepAnimation").css('display', "block");
+    } else{
+        $("#startAnimation").css('display',"block");
+        $("#stepAnimation").css('display', "none");
+    }
+
+}
+
+function switchNavbarElements(disable){
+    $("#nodeCount").prop( "disabled", disable );
+    $("#generateTree").prop( "disabled", disable );
+    $("#redrawTree").prop( "disabled", disable );
+    $("#saveTree").prop( "disabled", disable );
+    $("#loadTree").prop( "disabled", disable );
+    $("#animationTypeSelection").prop( "disabled", disable );
+    $("#startAnimation").prop( "disabled", disable );
+}
+
 
 function startAnimationPipeline(){
 
-    commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode)
+    commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
     // Loop Until source node in ancestor spot
     if(commonAncestor !== sourceNode){
-        nextAnimationStep(sourceNode, commonAncestor)
+        nextAnimationStep(sourceNode, commonAncestor);
     }
 
     // Loop Until dest node child of source node
     else if(!tree.isChild(sourceNode,destinationNode)){
         if(SplayNode.greater(sourceNode, destinationNode))
-            nextAnimationStep(destinationNode, sourceNode.leftChild)
+            nextAnimationStep(destinationNode, sourceNode.leftChild);
         else if(SplayNode.greater(destinationNode, sourceNode))
-            nextAnimationStep(destinationNode, sourceNode.rightChild)
+            nextAnimationStep(destinationNode, sourceNode.rightChild);
     }
 
     else {
         //fire done event
-        remove_and_build_lines(tree)
+        remove_and_build_lines(tree);
     }
 
 }
 
 function nextAnimationStep(rootNode, targetNode) {
     ////// Detect Step
-    let step = tree.getNextRotationStep(rootNode, targetNode)
+    let step = tree.getNextRotationStep(rootNode, targetNode);
     ////// Log Step
-    rotations_log.push("Execute " + step + " on Node " + rootNode.value)
-    updateLog(rotations_log, "rotationStepList")
+    rotations_log.push("Execute " + step + " on Node " + rootNode.value);
+    updateLog(rotations_log, "rotationStepList");
     ////// Execute Step
     if (step !== "DONE") {
         stepAnimation(step, rootNode);
@@ -230,9 +268,9 @@ function nextStep_Rotation(){
     if(anim_finished && rot_finished){
         rot_finished = false;
         anim_finished = false;
-        finish_animation()
+        finish_animation();
         if(animationType === "auto" || animationType === "flow")
-            startAnimationPipeline()
+            startAnimationPipeline();
     }
 }
 
@@ -241,27 +279,32 @@ function connector_redraw_finished_handler(){
     communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
     communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
     updateLog(communications_log, "communicationsList");
+
+    if(animationType === "step")
+        switchAnimationButton();
+    switchNavbarElements(false);
+
 }
 
 function updateNavbarButtons(){
-    animationType = $("#animationTypeSelection").prop('value')
+    animationType = $("#animationTypeSelection").prop('value');
     switch (animationType){
         case "auto":
-            $("#startAnimation").css('display',"none")
-            $("#stepAnimation").css('display', "none")
+            $("#startAnimation").css('display',"none");
+            $("#stepAnimation").css('display', "none");
             break;
         case "flow":
-            $("#startAnimation").css('display',"block")
-            $("#stepAnimation").css('display', "none")
+            $("#startAnimation").css('display',"block");
+            $("#stepAnimation").css('display', "none");
             break;
         case "step":
-            $("#startAnimation").css('display',"block")
-            $("#stepAnimation").css('display', "none")
+            $("#startAnimation").css('display',"block");
+            $("#stepAnimation").css('display', "none");
             break;
     }
-    reset()
-    $("#SourceText").text("Source : " + getSelectedSource())
-    $("#DestinationText").text("Destination : " + getSelectedDestination())
+    reset();
+    $("#SourceText").text("Source : " + getSelectedSource());
+    $("#DestinationText").text("Destination : " + getSelectedDestination());
 }
 
 function checkSelected(event){
@@ -269,12 +312,12 @@ function checkSelected(event){
     let valid = true;
     if(getSelectedSource() === "-" || getSelectedDestination() === "-"){
         //console.log("node-value")
-        reset()
+        reset();
         valid = false;
     }
 
-    $("#SourceText").text("Source : " + getSelectedSource())
-    $("#DestinationText").text("Destination : " + getSelectedDestination())
+    $("#SourceText").text("Source : " + getSelectedSource());
+    $("#DestinationText").text("Destination : " + getSelectedDestination());
 
     if(valid && animationType === "auto") startAnimation();
 }
@@ -282,12 +325,12 @@ function checkSelected(event){
 function updateLog(log, ordered_list){
 
     //remove Log FE
-    let ol = document.getElementById(ordered_list)
-    ol.innerHTML = ""
+    let ol = document.getElementById(ordered_list);
+    ol.innerHTML = "";
     let temp = [...log];
     //rewrite
     temp.reverse().forEach(function (item, index){
-        updateOrderedList(item, index, log.length ,ol)
+        updateOrderedList(item, index, log.length ,ol);
     })
 }
 
@@ -300,7 +343,7 @@ function updateOrderedList(item, index, logLength, ol){
     }else{
         li.textContent = item.toString();
     }
-    li.setAttribute("value",logLength-index)
-    li.setAttribute("class", "list-group-item")
-    ol.append(li)
+    li.setAttribute("value",logLength-index);
+    li.setAttribute("class", "list-group-item");
+    ol.append(li);
 }

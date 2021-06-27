@@ -1,11 +1,11 @@
 function middle(number){
-    return Math.floor(number / 2) + 1
+    return Math.floor(number / 2) + 1;
 }
 
 
 class SplayNode{
     value = 0;
-    parent = null
+    parent = null;
     leftChild = null;
     rightChild = null;
 
@@ -57,8 +57,8 @@ class SplayNode{
     }
 
     depth() {
-        let lDepth = this.leftChild  === null ? 0 : this.leftChild.depth()
-        let rDepth = this.rightChild === null ? 0 : this.rightChild.depth()
+        let lDepth = this.leftChild  === null ? 0 : this.leftChild.depth();
+        let rDepth = this.rightChild === null ? 0 : this.rightChild.depth();
 
         return rDepth > lDepth ? rDepth + 1 : lDepth + 1;
     }
@@ -80,7 +80,7 @@ class SplayNode{
     }
 
    static getTs(level){
-       var s = ""
+       var s = "";
        for(let i=0; i<level; i++)
            s+="\t";
        return s;
@@ -105,11 +105,11 @@ class SplayTree{
     root = null;
 
     constructor(amount) {
-        this.generate(amount)
+        this.generate(amount);
     }
 
     generate(size){
-        this.root = SplayNode.generate(null, 1, size)
+        this.root = SplayNode.generate(null, 1, size);
     }
 
     getCommonAncestor(nodeA, nodeB){
@@ -132,7 +132,7 @@ class SplayTree{
             leftCorrect = SplayNode.lesser(leftNode, ancestor) || SplayNode.equals(leftNode, ancestor);
             rightCorrect = SplayNode.lesser(ancestor, rightNode)|| SplayNode.equals(ancestor, rightNode);
         }
-        return ancestor
+        return ancestor;
     }
 
     isChild(parent, node){
@@ -166,22 +166,22 @@ class SplayTree{
     rotate(type, node){
         switch (type){
             case "ZIG":
-                this.zig(node)
+                this.zig(node);
                 break;
             case "ZIGZIG":
-                this.zigzig(node)
+                this.zigzig(node);
                 break;
             case "ZIGZAG":
-                this.zigzag(node)
+                this.zigzag(node);
                 break;
         }
 
         const rotation_finished_event = new Event('rotation_finished');
-        dispatchEvent(rotation_finished_event)
+        dispatchEvent(rotation_finished_event);
     }
 
     depth(){
-        return this.root.depth()
+        return this.root.depth();
     }
 
     zig(src){
@@ -216,30 +216,27 @@ class SplayTree{
     }
 
     zigzig(src){
-        //console.log(src.parent)
-        let is_left_child = (src.parent.leftChild === src)
 
         //zig parent and parent's parent
-        this.zig(src.parent)
+        this.zig(src.parent);
 
         //zig src and parent
-        this.zig(src)
+        this.zig(src);
     }
 
     zigzag(src){
-        let is_left_child = (src.parent.leftChild === src)
 
         //zig src and parent
-        this.zig(src)
+        this.zig(src);
 
         //zig parent and parent's parent
-        this.zig(src)
+        this.zig(src);
     }
 
     printOut(){
-        console.log("------------FULL TREE PRINTOUT------------")
+        console.log("------------FULL TREE PRINTOUT------------");
         SplayNode.print(this.root, 0);
-        console.log("------------------------------------------")
+        console.log("------------------------------------------");
     }
 
 
