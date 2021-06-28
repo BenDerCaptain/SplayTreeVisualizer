@@ -11,8 +11,53 @@ let SelectedDestination = -1;
 function initSVG(heightVal, widthVal){
     width = widthVal;
     height = heightVal;
-    let svg = SVG().addTo('#SVGContainer').panZoom({panButton: 1});
+    let svg = SVG().addTo('#SVGContainer').panZoom({panButton: 1}).id("SVGViewbox");
     draw = svg.viewbox(0, 0, width, height);
+
+    draw.on('mousemove', redraw_line)
+        .on('mouseup', stop_redraw_line)
+
+}
+
+let x_pos_src_communication_line = 0
+let y_pos_src_communication_line = 0
+let x_pos_dest_communication_line = 0
+let y_pos_dest_communication_line = 0
+
+let is_drawing = false
+
+function redraw_line(event){
+    if(!is_drawing) return;
+    let point = draw.point(event.x, event.y)
+
+    x_pos_dest_communication_line = point.x;
+    y_pos_dest_communication_line = point.y;
+    draw_communication_line();
+}
+
+function stop_redraw_line(event){
+    if(event.button !== 0) return;
+    is_drawing = false
+}
+
+function draw_communication_line(){
+    let line = SVG("#comm_line")
+    if(line === null){
+        let lines = SVG("#lineGroup")
+        lines
+            .line(x_pos_src_communication_line,
+                y_pos_src_communication_line,
+                x_pos_dest_communication_line,
+                y_pos_dest_communication_line)
+            .id("comm_line")
+            .stroke({ color: 'green', width: 3});
+    }else{
+        line.attr({x1:x_pos_src_communication_line, y1: y_pos_src_communication_line,x2:x_pos_dest_communication_line, y2: y_pos_dest_communication_line})
+    }
+}
+
+function delete_communication_line(){
+    SVG("#comm_line").remove()
 }
 
 function createSVGTree(splayTree){
@@ -80,12 +125,23 @@ function getSelectedDestination(){
     return SelectedDestination;
 }
 
-function selectSource(){
+function selectSource(event){
+    if(event.button !== 0) return;
+    is_drawing = true;
     SelectedSource = this.attr("node-value");
+    x_pos_src_communication_line = this.cx();
+    y_pos_src_communication_line = this.cy();
+    x_pos_dest_communication_line = this.cx();
+    y_pos_dest_communication_line = this.cy();
 }
 
-function selectDestination(){
+function selectDestination(event){
+    if(event.button !== 0) return;
+    is_drawing = false;
     SelectedDestination = this.attr("node-value");
+    x_pos_dest_communication_line = this.cx();
+    y_pos_dest_communication_line = this.cy();
+    draw_communication_line();
 }
 
 function disableNodeMouseEvents(){

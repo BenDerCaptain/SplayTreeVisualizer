@@ -159,6 +159,8 @@ let destinationNode;
 let commonAncestor;
 
 function startAnimation(){
+
+    delete_communication_line()
     rotations_log = [];
     rotations_log.push("Start Animation");
 
