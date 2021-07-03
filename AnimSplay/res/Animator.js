@@ -50,14 +50,19 @@ function draw_communication_line(){
                 x_pos_dest_communication_line,
                 y_pos_dest_communication_line)
             .id("comm_line")
-            .stroke({ color: 'green', width: 3});
+            .stroke({ color: 'green', width: 6});
     }else{
-        line.attr({x1:x_pos_src_communication_line, y1: y_pos_src_communication_line,x2:x_pos_dest_communication_line, y2: y_pos_dest_communication_line})
+        line.attr({ x1:x_pos_src_communication_line,
+                    y1: y_pos_src_communication_line,
+                    x2:x_pos_dest_communication_line,
+                    y2: y_pos_dest_communication_line});
     }
 }
 
 function delete_communication_line(){
-    SVG("#comm_line").remove()
+    let line = SVG("#comm_line");
+    if(line !== null)
+        line.remove();
 }
 
 function createSVGTree(splayTree){
@@ -127,8 +132,11 @@ function getSelectedDestination(){
 
 function selectSource(event){
     if(event.button !== 0) return;
+
     is_drawing = true;
+    reset();
     SelectedSource = this.attr("node-value");
+
     x_pos_src_communication_line = this.cx();
     y_pos_src_communication_line = this.cy();
     x_pos_dest_communication_line = this.cx();

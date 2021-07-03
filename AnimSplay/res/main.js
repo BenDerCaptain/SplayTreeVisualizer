@@ -328,8 +328,8 @@ function checkSelected(event){
     if(event.button !== 0) return;
     let valid = true;
     if(getSelectedSource() === "-" || getSelectedDestination() === "-"){
-        //console.log("node-value")
         reset();
+        delete_communication_line()
         valid = false;
     }
 
