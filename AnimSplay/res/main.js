@@ -282,6 +282,7 @@ function nextStep_Rotation(){
         rot_finished = false;
         anim_finished = false;
         finish_animation();
+        instant_rebuild_lines(tree)
         if(animationType === "auto" || animationType === "flow")
             startAnimationPipeline();
         else

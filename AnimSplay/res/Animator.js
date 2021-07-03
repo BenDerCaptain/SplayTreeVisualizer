@@ -282,6 +282,11 @@ function build_lines(lines_group_node, tree){
 
 }
 
+function instant_rebuild_lines(tree){
+    let lines_group_node = SVG("#lineGroup");
+    lines_group_node.children().forEach(child => child.remove());
+    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
+}
 
 
 function finish_animation(){
@@ -343,6 +348,10 @@ function zag(nodeToRotate, timeline, start_time) {
     let left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    let value1 = destinationNode.value;
+    let value2 = nodeToRotate.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //1.3 move A to p.left (down)
     let downNode = destinationNode.leftChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level+2, left_child_xpos, "left");
@@ -356,7 +365,7 @@ function zag(nodeToRotate, timeline, start_time) {
     start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level+1, target_xpos, "right");
 
     //2. Redraw lines (FIN)
-    return start_time;
+    return start_time+1000;
 }
 
 function zig(nodeToRotate, timeline, start_time) {
@@ -414,6 +423,10 @@ function zig(nodeToRotate, timeline, start_time) {
     let left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    let value1 = destinationNode.value;
+    let value2 = nodeToRotate.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //1.3 move C to p.right (down)
     let downNode = destinationNode.rightChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "right");
@@ -427,7 +440,7 @@ function zig(nodeToRotate, timeline, start_time) {
     start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 1, target_xpos, "left");
 
     //2. Redraw lines (FIN)
-    return start_time;
+    return start_time+1000;
 
 }
 
@@ -524,6 +537,10 @@ function zagzag(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    let value1 = grandParentNode.value;
+    let value2 = parentNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //1.3 move A to g.left (down)
     downNode = grandParentNode.leftChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "left");
@@ -537,6 +554,7 @@ function zagzag(nodeToRotate, timeline, start_time) {
     start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 1, target_xpos, "right");
 
     //2. Zag x
+    start_time += 1000;
 
     //get nodes to animate (source, parent)
     nodeToAnimate = SVG(idSource);
@@ -560,10 +578,18 @@ function zagzag(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(bridgeNode, bridgeText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    value1 = parentNode.value;
+    value2 = sourceNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //2.3 move g to A (down)
     let left_lower_child_xpos = left_child_xpos - width / Math.pow(2, (y_level + 2) + 1);
     let left_lower_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     moveTo(targetNode, targetText, timeline, start_time, left_lower_child_xpos, left_lower_ypos);
+
+    value1 = grandParentNode.value;
+    value2 = parentNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_lower_child_xpos, left_lower_ypos, left_child_xpos, left_child_ypos)
 
     //2.4 move A to g.left (down)
     downNode = grandParentNode.leftChild;
@@ -582,7 +608,7 @@ function zagzag(nodeToRotate, timeline, start_time) {
     start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 1, target_xpos, "right");
 
     //3. Redraw lines (FIN)
-    return start_time;
+    return start_time+1000;
 
 }
 
@@ -680,6 +706,10 @@ function zigzig(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    let value1 = grandParentNode.value;
+    let value2 = parentNode.value;
+    rotate_lines(value1, value2,timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //1.3 move D to g.right (down)
     downNode = grandParentNode.rightChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "right");
@@ -694,6 +724,7 @@ function zigzig(nodeToRotate, timeline, start_time) {
 
     //zig target to destination
     // 2 Zig x
+    start_time +=1000;
 
     //get nodes to animate (source, parent)
     nodeToAnimate = SVG(idSource);
@@ -717,10 +748,18 @@ function zigzig(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(bridgeNode, bridgeText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    value1 = parentNode.value;
+    value2 = sourceNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //2.3 move g to D (down)
     let left_lower_child_xpos = left_child_xpos + width / Math.pow(2, (y_level + 2) + 1);
     let left_lower_ypos = (y_level + 2) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     moveTo(targetNode, targetText, timeline, start_time, left_lower_child_xpos, left_lower_ypos);
+
+    value1 = grandParentNode.value;
+    value2 = parentNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_lower_child_xpos, left_lower_ypos, left_child_xpos, left_child_ypos)
 
     //2.4 move D to g.right (down)
     downNode = grandParentNode.rightChild;
@@ -739,7 +778,7 @@ function zigzig(nodeToRotate, timeline, start_time) {
     start_time = moveSubTree_recursionStart(timeline, start_time, upNode, y_level + 1, target_xpos, "left");
 
     //3. Redraw lines (FIN)
-    return start_time;
+    return start_time+1000;
 
 }
 
@@ -837,6 +876,10 @@ function zagzig(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    let value1 = parentNode.value;
+    let value2 = sourceNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //1.3 move A to p.left (down)
     downNode = parentNode.leftChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "left");
@@ -851,6 +894,7 @@ function zagzig(nodeToRotate, timeline, start_time) {
 
     //zig target to destination
     //2. Zig x
+    start_time +=1000;
 
     //get nodes to animate (source, parent)
     nodeToAnimate = SVG(idSource);
@@ -877,6 +921,10 @@ function zagzig(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    value1 = grandParentNode.value;
+    value2 = parentNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //2.3 move D to g.right (down)
     downNode = grandParentNode.rightChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "right");
@@ -889,6 +937,10 @@ function zagzig(nodeToRotate, timeline, start_time) {
     left_child_xpos = target_xpos - width / Math.pow(2, (y_level + 1) + 1);
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     moveTo(bridgeNode, bridgeText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    value1 = parentNode.value;
+    value2 = sourceNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
 
     //2.6 move A to p.left (up)
     upNode = parentNode.leftChild;
@@ -999,6 +1051,10 @@ function zigzag(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    let value1 = parentNode.value;
+    let value2 = sourceNode.value;
+    rotate_lines(value1, value2,timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //1.3 move D to p.right (down)
     downNode = parentNode.rightChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "right");
@@ -1013,6 +1069,7 @@ function zigzag(nodeToRotate, timeline, start_time) {
 
     //zig target to destination
     //2. Zag x
+    start_time +=1000;
 
     //get nodes to animate (source, parent)
     nodeToAnimate = SVG(idSource);
@@ -1037,6 +1094,10 @@ function zigzag(nodeToRotate, timeline, start_time) {
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     start_time = moveTo(targetNode, targetText, timeline, start_time, left_child_xpos, left_child_ypos);
 
+    value1 = grandParentNode.value;
+    value2 = parentNode.value;
+    rotate_lines(value1, value2,timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
+
     //2.3 move A to g.left (down)
     downNode = grandParentNode.leftChild;
     start_time = moveSubTree_recursionStart(timeline, start_time, downNode, y_level + 2, left_child_xpos, "left");
@@ -1049,6 +1110,10 @@ function zigzag(nodeToRotate, timeline, start_time) {
     left_child_xpos = target_xpos + width / Math.pow(2, (y_level + 1) + 1);
     left_child_ypos = (y_level + 1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
     moveTo(bridgeNode, bridgeText, timeline, start_time, left_child_xpos, left_child_ypos);
+
+    value1 = parentNode.value;
+    value2 = sourceNode.value;
+    rotate_lines(value1, value2, timeline, start_time, left_child_xpos, left_child_ypos, target_xpos, target_ypos)
 
     //2.6 move D to p.right (up)
     upNode = parentNode.rightChild;
@@ -1071,11 +1136,19 @@ function moveSubTree_recursionStart(timeline, start_time, node, y_level, target_
         let subtree_xpos = target_xpos;
         if(side === "left")
             subtree_xpos -= width / Math.pow(2, y_level + 1);
-        else if(side = "right")
+        else if(side === "right")
             subtree_xpos += width / Math.pow(2, y_level + 1);
 
         let subtree_ypos = y_level * CIRCLE_DIAMETER * 5 + (MARGIN_TOP);
+
+
+        let value1 = node.parent.value;
+        let value2 = node.value;
+        rotate_lines(value1, value2, timeline, start_time, target_xpos, (y_level-1) * CIRCLE_DIAMETER * 5 + (MARGIN_TOP), subtree_xpos, subtree_ypos)
+
+
         start_time = moveSubTree(node, SVG(id), SVG(id_text), timeline, start_time, y_level, subtree_xpos, subtree_ypos);
+
     }
 
     return start_time;
@@ -1084,6 +1157,7 @@ function moveSubTree_recursionStart(timeline, start_time, node, y_level, target_
 function moveSubTree(node, circle, text, timeline, start_time, y_level, pos_x, pos_y){
 
     moveTo(circle, text, timeline, start_time, pos_x, pos_y);
+    let value1 = node.value;
 
     //leftChild
     let sideNode = node.leftChild;
@@ -1092,8 +1166,11 @@ function moveSubTree(node, circle, text, timeline, start_time, y_level, pos_x, p
         let idLeft_text = "#node_" + sideNode.value + "_text";
         let target_xpos = pos_x - width/Math.pow(2, (y_level+1)+1);
         let target_ypos =(y_level+1)*CIRCLE_DIAMETER*5+(MARGIN_TOP);
-        moveSubTree(sideNode, SVG(idLeft), SVG(idLeft_text), timeline, start_time, y_level+1, target_xpos, target_ypos);
 
+        let value2 = sideNode.value;
+        rotate_lines(value1, value2, timeline, start_time, pos_x, pos_y, target_xpos, target_ypos)
+
+        moveSubTree(sideNode, SVG(idLeft), SVG(idLeft_text), timeline, start_time, y_level+1, target_xpos, target_ypos);
     }
 
     //rightChild
@@ -1103,11 +1180,14 @@ function moveSubTree(node, circle, text, timeline, start_time, y_level, pos_x, p
         let idRight_text = "#node_" + rightNode.value + "_text";
         let target_xpos = pos_x + width/Math.pow(2, (y_level+1)+1);
         let target_ypos =(y_level+1)*CIRCLE_DIAMETER*5+(MARGIN_TOP);
-        moveSubTree(rightNode, SVG(idRight), SVG(idRight_text), timeline, start_time, y_level+1, target_xpos, target_ypos);
 
+        let value2 = rightNode.value;
+        rotate_lines(value1,value2, timeline, start_time, pos_x, pos_y, target_xpos, target_ypos)
+
+        moveSubTree(rightNode, SVG(idRight), SVG(idRight_text), timeline, start_time, y_level+1, target_xpos, target_ypos);
     }
 
-    return start_time+1000;
+    return start_time;
 }
 
 function moveTo(circle, text, timeline, start_time, pos_x, pos_y){
@@ -1125,6 +1205,31 @@ function moveTo(circle, text, timeline, start_time, pos_x, pos_y){
     //One frame change size
     circle.animate(1, start_time+999, "absolute").size(20).attr({fill: '#00278B', 'stroke-width': 0});
 
-    return start_time+1000;
+    return start_time;
 
+}
+
+function rotate_lines(v1, v2, timeline, start_time, pos_x1, pos_y1, pos_x2, pos_y2){
+
+    let connector = "#connector_"+v1+"_"+v2;
+    let line = SVG(connector);
+    if(line === null){
+        connector = "#connector_"+v2+"_"+v1;
+        line = SVG(connector);
+        if(line === null){
+            console.log("ERROR");
+            return;
+        }
+    }
+
+
+    line.timeline(timeline);
+
+    //move circle => most frames for movement
+    line.animate(998, start_time+1, "absolute" ).attr({ x1: pos_x1,
+                                                        y1: pos_y1,
+                                                        x2: pos_x2,
+                                                        y2: pos_y2});
+
+    return start_time;
 }
