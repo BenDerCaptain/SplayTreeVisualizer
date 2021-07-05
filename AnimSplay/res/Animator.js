@@ -234,54 +234,6 @@ function stepAnimation(step, sourceNode) {
         });
 }
 
-function remove_and_build_lines(tree){
-
-    remove_lines(tree);
-
-}
-
-function remove_lines(tree){
-    // animate old lines remove
-    let lines_group_node = SVG("#lineGroup");
-
-    lines_group_node.timeline(timeline);
-
-    //One frame change size => change size before movement
-    lines_group_node.animate(500, start_time, "absolute").opacity(0);
-
-    start_time = start_time + 500;
-
-    // remove old lines
-    let done_runner = new SVG.Runner();
-    done_runner.timeline(timeline);
-    done_runner.animate(1, start_time, "absolute")
-        .after(function (){
-            lines_group_node.children().forEach(child => child.remove());
-            build_lines(lines_group_node, tree);
-        });
-}
-
-function build_lines(lines_group_node, tree){
-    // build new lines
-    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
-
-    //One frame change size => change size before movement
-    lines_group_node.animate(500, start_time, "absolute").opacity(1);
-
-    start_time = start_time + 500;
-
-    // remove old lines
-    let done_runner = new SVG.Runner();
-    const line_redraw_finished_event = new Event('line_redraw_finished');
-    done_runner.timeline(timeline);
-    done_runner.animate(1, start_time, "absolute")
-        .after(function (){
-            dispatchEvent(line_redraw_finished_event);
-        });
-    // animate new lines fade-in
-
-}
-
 function instant_rebuild_lines(tree){
     let lines_group_node = SVG("#lineGroup");
     lines_group_node.children().forEach(child => child.remove());

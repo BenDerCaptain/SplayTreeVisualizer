@@ -13,7 +13,6 @@ function init(){
 
     addEventListener('rotation_finished', this.rotation_finished_handler);
     addEventListener('animation_finished', this.animation_finished_handler);
-    addEventListener('line_redraw_finished', this.connector_redraw_finished_handler);
 
     test1();
     //test2()
@@ -48,6 +47,8 @@ function generateTree(){
         return;
 
     redrawTree();
+    switchAnimationButtonTo("start");
+    switchNavbarElements(false);
 }
 
 function redrawTree(){
@@ -55,6 +56,8 @@ function redrawTree(){
     finish_animation();
     tree = new SplayTree(nodesToGenerate);
     createSVGTree(tree);
+    switchAnimationButtonTo("start");
+    switchNavbarElements(false);
 }
 
 function clearLogs(){
@@ -162,7 +165,6 @@ function startAnimation(){
 
     delete_communication_line()
     rotations_log = [];
-    rotations_log.push("Start Animation");
 
     let sourceValue = getSelectedSource();
     let destinationValue = getSelectedDestination();
@@ -184,7 +186,7 @@ function startAnimation(){
     animation_running = true;
 
     if(animationType === "step")
-        switchAnimationButton();
+        switchAnimationButtonTo("step");
     switchNavbarElements(true);
 
     disableNodeMouseEvents();
@@ -192,14 +194,12 @@ function startAnimation(){
     startAnimationPipeline();
 }
 
-function switchAnimationButton(){
+function switchAnimationButtonTo(string){
 
-    let startButton_display = $("#startAnimation").css('display');
-
-    if(startButton_display === "block"){
+    if(string === "step"){
         $("#startAnimation").css('display',"none");
         $("#stepAnimation").css('display', "block");
-    } else{
+    } else if (string === "start"){
         $("#startAnimation").css('display',"block");
         $("#stepAnimation").css('display', "none");
     }
@@ -215,9 +215,6 @@ function enableStepAnimationButton() {
 }
 
 function switchNavbarElements(disable){
-    $("#nodeCount").prop( "disabled", disable );
-    $("#generateTree").prop( "disabled", disable );
-    $("#redrawTree").prop( "disabled", disable );
     $("#saveTree").prop( "disabled", disable );
     $("#loadTree").prop( "disabled", disable );
     $("#animationTypeSelection").prop( "disabled", disable );
@@ -243,8 +240,7 @@ function startAnimationPipeline(){
     }
 
     else {
-        //fire done event
-        remove_and_build_lines(tree);
+        animation_complete()
     }
 
 }
@@ -290,14 +286,13 @@ function nextStep_Rotation(){
     }
 }
 
-function connector_redraw_finished_handler(){
+function animation_complete(){
     //createSVGTree(tree)
     communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
     communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
     updateLog(communications_log, "communicationsList");
 
-    if(animationType === "step")
-        switchAnimationButton();
+    switchAnimationButtonTo("start");
     switchNavbarElements(false);
 
     enableNodeMouseEvents();
