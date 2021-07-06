@@ -5,8 +5,30 @@ let CIRCLE_DIAMETER = 20;
 let CIRCLE_RADIUS = CIRCLE_DIAMETER/2;
 let MARGIN_TOP = 20;
 
+//Used Coloring Schema
+let COLOR_NODE_BASE = '#00278B';
+let COLOR_NODE_ANIMATED = '#6c92ff';
+let COLOR_NODE_SELECTED = '#d6ae28';
+let COLOR_NODE_LCA = '#FFFFFF';
+let COLOR_LINE_BASE = '#cdcdcd';
+let COLOR_LINE_COMMUNICATION = '#19b81a';
+let COLOR_LINE_PATH = '#FFFFFF';
+let COLOR_NODE_BORDER = '#0a0f15';
+let COLOR_NODE_HOVER = '#ea1212';
+let COLOR_TEXT_BASE = '#ffffff';
+let COLOR_TEXT_HOVER ='#ffffff'
+
+//SelectionValues And communication Line
 let SelectedSource = -1;
 let SelectedDestination = -1;
+
+let x_pos_src_communication_line = 0
+let y_pos_src_communication_line = 0
+let x_pos_dest_communication_line = 0
+let y_pos_dest_communication_line = 0
+
+let is_drawing = false
+
 
 function initSVG(heightVal, widthVal){
     width = widthVal;
@@ -18,13 +40,6 @@ function initSVG(heightVal, widthVal){
         .on('mouseup', stop_redraw_line)
 
 }
-
-let x_pos_src_communication_line = 0
-let y_pos_src_communication_line = 0
-let x_pos_dest_communication_line = 0
-let y_pos_dest_communication_line = 0
-
-let is_drawing = false
 
 function redraw_line(event){
     if(!is_drawing) return;
@@ -50,7 +65,7 @@ function draw_communication_line(){
                 x_pos_dest_communication_line,
                 y_pos_dest_communication_line)
             .id("comm_line")
-            .stroke({ color: 'green', width: 6});
+            .stroke({ color: COLOR_LINE_COMMUNICATION, width: 6});
     }else{
         line.attr({ x1:x_pos_src_communication_line,
                     y1: y_pos_src_communication_line,
@@ -80,17 +95,17 @@ function build_nodes(nodeGroup, textGroup, x_position, half_width, y_level, node
         .center(x_position, y_level*CIRCLE_DIAMETER*5+(MARGIN_TOP))
         .id("node_"+node.value.toString())
         .attr("node-value", node.value.toString())
-        .fill('#00278B')
+        .fill(COLOR_NODE_BASE)
         .on('mousedown', selectSource)
         .on('mouseup', selectDestination)
         .on('mouseover', mouseOver)
         .on('mouseout', mouseOut);
-    circle.stroke('#0a0f15');
+    circle.stroke(COLOR_NODE_BORDER);
     circle.attr("stroke-width",0);
 
     let text = textGroup
         .text(node.value.toString())
-        .font({fill: '#fff', family: 'Calibri', size: 15 })
+        .font({fill: COLOR_TEXT_BASE, family: 'Calibri', size: 15 })
         .center(x_position, y_level*CIRCLE_DIAMETER*5+(MARGIN_TOP))
         .id("node_"+node.value.toString()+"_text")
         .css("pointer-events", "none");
@@ -109,7 +124,7 @@ function create_lines(lineGroup, x_position, half_width, y_level, node){
         let line = lineGroup
             .line(x_position, y_level*CIRCLE_DIAMETER*5+MARGIN_TOP, x_position - (half_width/2.), (y_level+1)*CIRCLE_DIAMETER*5+MARGIN_TOP)
             .id("connector_"+node.value.toString()+"_"+node.leftChild.value.toString());
-        line.stroke({ color: 'lightgrey', width: 3});
+        line.stroke({ color: COLOR_LINE_BASE, width: 3});
         create_lines(lineGroup, x_position - (half_width/2.), half_width/2., y_level+1, node.leftChild);
     }
 
@@ -117,7 +132,7 @@ function create_lines(lineGroup, x_position, half_width, y_level, node){
         let line = lineGroup
             .line(x_position, y_level*CIRCLE_DIAMETER*5+MARGIN_TOP, x_position + (half_width/2.), (y_level+1)*CIRCLE_DIAMETER*5+MARGIN_TOP)
             .id("connector_"+node.value.toString()+"_"+node.rightChild.value.toString());
-        line.stroke({ color: 'lightgrey', width: 3});
+        line.stroke({ color: COLOR_LINE_BASE, width: 3});
         create_lines(lineGroup, x_position + (half_width/2.), half_width/2., y_level+1, node.rightChild);
     }
 }
@@ -136,6 +151,7 @@ function selectSource(event){
     is_drawing = true;
     reset();
     SelectedSource = this.attr("node-value");
+    this.attr('fill', COLOR_NODE_SELECTED);
 
     x_pos_src_communication_line = this.cx();
     y_pos_src_communication_line = this.cy();
@@ -147,6 +163,7 @@ function selectDestination(event){
     if(event.button !== 0) return;
     is_drawing = false;
     SelectedDestination = this.attr("node-value");
+    this.attr('fill', COLOR_NODE_SELECTED);
     x_pos_dest_communication_line = this.cx();
     y_pos_dest_communication_line = this.cy();
     draw_communication_line();
@@ -163,27 +180,43 @@ function enableNodeMouseEvents(){
 }
 
 function mouseOver(){
-    this.fill("#ea1212");
+    this.fill(COLOR_NODE_HOVER);
     this.size(25);
 
     let node_value = this.attr("node-value")
     let hovered_text = SVG("#node_"+node_value+"_text")
-    hovered_text.font({weight:"bold", fill:"#ffffff"});
+    hovered_text.font({weight:"bold", fill:COLOR_TEXT_HOVER});
 
 }
 
 function mouseOut(){
-    this.fill("#00278B");
+    let nodeValue = this.attr("node-value")
+    if(nodeValue === SelectedSource ||nodeValue === SelectedDestination){
+        this.fill(COLOR_NODE_SELECTED)
+    }else{
+        this.fill(COLOR_NODE_BASE);
+    }
     this.size(20);
 
     let node_value = this.attr("node-value")
     let hovered_text = SVG("#node_"+node_value+"_text")
-    hovered_text.font({weight:"normal", fill:"#ffffff"});
+    hovered_text.font({weight:"normal", fill:COLOR_TEXT_BASE});
 }
 
 function reset(){
+    delete_communication_line();
+    let src_node = '#node_'+SelectedSource;
+    let dest_node = '#node_'+SelectedDestination;
+    reset_node_color(SVG(src_node))
+    reset_node_color(SVG(dest_node))
+
     SelectedSource = "-";
     SelectedDestination = "-";
+}
+
+function reset_node_color(node){
+    if(node !== null)
+        node.attr('fill', COLOR_NODE_BASE)
 }
 
 //Animation Start
@@ -239,7 +272,6 @@ function instant_rebuild_lines(tree){
     lines_group_node.children().forEach(child => child.remove());
     create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
 }
-
 
 function finish_animation(){
     timeline = new SVG.Timeline();
@@ -1147,15 +1179,18 @@ function moveTo(circle, text, timeline, start_time, pos_x, pos_y){
     circle.timeline(timeline);
     text.timeline(timeline);
 
+    //get node color for reset later
+    let node_color = circle.attr('fill')
+
     //One frame change size => change size before movement
-    circle.animate(1, start_time, "absolute").size(22).attr({fill: '#6c92ff', "stroke-width": 1});
+    circle.animate(1, start_time, "absolute").size(22).attr({fill: COLOR_NODE_ANIMATED, "stroke-width": 1});
 
     //move circle => most frames for movement
     circle.animate(998, start_time+1, "absolute" ).center(pos_x, pos_y);
     text.animate(998, start_time+1, "absolute" ).center(pos_x, pos_y);
 
     //One frame change size
-    circle.animate(1, start_time+999, "absolute").size(20).attr({fill: '#00278B', 'stroke-width': 0});
+    circle.animate(1, start_time+999, "absolute").size(20).attr({fill: node_color, 'stroke-width': 0});
 
     return start_time;
 

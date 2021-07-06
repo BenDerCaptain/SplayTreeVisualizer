@@ -16,7 +16,6 @@ function init(){
 
     test1();
     //test2()
-    //test3()
 
 }
 
@@ -33,9 +32,6 @@ function test2(){
     checkSelected();
 }
 
-function test3(){
-    remove_and_build_lines(tree);
-}
 
 function generateTree(){
     nodesToGenerate = $("#nodeCount").prop('value');
@@ -240,7 +236,8 @@ function startAnimationPipeline(){
     }
 
     else {
-        animation_complete()
+        animation_complete();
+        setSrcDestInfo(true);
     }
 
 }
@@ -315,26 +312,28 @@ function updateNavbarButtons(){
             $("#stepAnimation").css('display', "none");
             break;
     }
-    reset();
-    $("#SourceText").text("Source : " + getSelectedSource());
-    $("#DestinationText").text("Destination : " + getSelectedDestination());
+
+    setSrcDestInfo(true);
 }
 
 function checkSelected(event){
     if(event.button !== 0) return;
     let valid = true;
     if(getSelectedSource() === "-" || getSelectedDestination() === "-"){
-        reset();
-        delete_communication_line()
+        setSrcDestInfo(true);
+        delete_communication_line();
         valid = false;
+    }else{
+        setSrcDestInfo(false);
     }
-
-    $("#SourceText").text("Source : " + getSelectedSource());
-    $("#DestinationText").text("Destination : " + getSelectedDestination());
 
     if(valid && animationType === "auto") startAnimation();
 }
-
+function setSrcDestInfo(shall_reset){
+    if(shall_reset) reset();
+    $("#SourceText").text("Source : " + getSelectedSource());
+    $("#DestinationText").text("Destination : " + getSelectedDestination());
+}
 function updateLog(log, ordered_list){
 
     //remove Log FE
