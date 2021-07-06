@@ -9,10 +9,10 @@ let MARGIN_TOP = 20;
 let COLOR_NODE_BASE = '#00278B';
 let COLOR_NODE_ANIMATED = '#6c92ff';
 let COLOR_NODE_SELECTED = '#d6ae28';
-let COLOR_NODE_LCA = '#FFFFFF';
+let COLOR_NODE_LCA = '#9ff50b';
 let COLOR_LINE_BASE = '#cdcdcd';
 let COLOR_LINE_COMMUNICATION = '#19b81a';
-let COLOR_LINE_PATH = '#FFFFFF';
+let COLOR_LINE_PATH = '#d22222';
 let COLOR_NODE_BORDER = '#0a0f15';
 let COLOR_NODE_HOVER = '#ea1212';
 let COLOR_TEXT_BASE = '#ffffff';
@@ -219,6 +219,12 @@ function reset_node_color(node){
         node.attr('fill', COLOR_NODE_BASE)
 }
 
+function instant_rebuild_lines(tree){
+    let lines_group_node = SVG("#lineGroup");
+    lines_group_node.children().forEach(child => child.remove());
+    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
+}
+
 //Animation Start
 let timeline = new SVG.Timeline();
 let animation_speed = 1;
@@ -267,16 +273,83 @@ function stepAnimation(step, sourceNode) {
         });
 }
 
-function instant_rebuild_lines(tree){
-    let lines_group_node = SVG("#lineGroup");
-    lines_group_node.children().forEach(child => child.remove());
-    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
-}
-
 function finish_animation(){
     timeline = new SVG.Timeline();
     timeline.speed(animation_speed);
     start_time = 0;
+}
+
+function highlight_route(srcNode, destNode, commonAncestor){
+    let lineList = get_lines_from_nodes(srcNode, destNode, commonAncestor);
+
+    lineList.forEach(function (line_id){
+        let line = SVG(line_id)
+        line.timeline(timeline)
+        line.animate(1000, start_time, "absolute" ).stroke({ color: COLOR_LINE_PATH, width: 4});
+    })
+
+    start_time += 1000;
+
+    const route_detection_finished_event = new Event('route_detection_finished');
+    let done_runner = new SVG.Runner();
+    done_runner.timeline(timeline);
+    done_runner.animate(1, start_time, "absolute")
+        .after(function (){
+            dispatchEvent(route_detection_finished_event);
+        });
+
+}
+
+function remove_route_highlight(srcNode, destNode, commonAncestor){
+
+    let lineList = get_lines_from_nodes(srcNode, destNode, commonAncestor);
+
+    lineList.forEach(function (line_id){
+        let line = SVG(line_id)
+        line.timeline(timeline)
+        line.animate(1000, start_time, "absolute" ).stroke({ color: COLOR_LINE_BASE, width: 3});
+    })
+
+}
+
+function get_lines_from_nodes(srcNode, destNode, commonAncestor){
+    let nodeList = [srcNode, destNode];
+    let lineList = [];
+    for(let i=0; i<2; i++){
+        let currentNode = nodeList[i]
+        while(!SplayNode.equals(currentNode, commonAncestor)){
+            let parent = currentNode.parent;
+            let line = "#connector_"+parent.value+"_"+currentNode.value;
+            lineList.push(line)
+            currentNode = parent;
+        }
+    }
+    return lineList;
+}
+function change_highlight_from_route_to_lca(srcNode, destNode, commonAncestor){
+    remove_route_highlight(srcNode, destNode, commonAncestor)
+
+    let lca_id = "#node_"+commonAncestor.value;
+    let lca_node = SVG(lca_id)
+
+    lca_node.timeline(timeline)
+    lca_node.animate(1000, start_time, "absolute").attr({fill: COLOR_NODE_LCA});
+
+    start_time += 1000;
+    const lca_detection_finished_event = new Event('lca_detection_finished');
+    let done_runner = new SVG.Runner();
+    done_runner.timeline(timeline);
+    done_runner.animate(1, start_time, "absolute")
+        .after(function (){
+            dispatchEvent(lca_detection_finished_event);
+        });
+}
+
+function remove_lca_highlight(commonAncestor){
+    let lca_id = "#node_"+commonAncestor.value;
+    let lca_node = SVG(lca_id)
+
+    lca_node.attr({fill: COLOR_NODE_BASE});
 }
 
 // Zig's Animation code

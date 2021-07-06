@@ -5,7 +5,6 @@ let animationType;
 let communications = [];
 let communications_log = [];
 let rotations_log = [];
-let animation_running = false;
 
 function init(){
     initSVG(500,1000);
@@ -13,6 +12,8 @@ function init(){
 
     addEventListener('rotation_finished', this.rotation_finished_handler);
     addEventListener('animation_finished', this.animation_finished_handler);
+    addEventListener('route_detection_finished', this.route_detection_finished_handler);
+    addEventListener('lca_detection_finished', this.lca_detection_finished_handler);
 
     test1();
     //test2()
@@ -156,12 +157,18 @@ function changeSpeed(){
 let sourceNode;
 let destinationNode;
 let commonAncestor;
+let initialCommonAncestor;
+let rotating;
+let routed;
 
 function startAnimation(){
 
     delete_communication_line()
     rotations_log = [];
+    rotating = false;
+    routed = false;
 
+    //first variable check
     let sourceValue = getSelectedSource();
     let destinationValue = getSelectedDestination();
 
@@ -171,15 +178,7 @@ function startAnimation(){
     //Get nodes from selected
     sourceNode = tree.getNodeByValue(parseInt(sourceValue));
     destinationNode = tree.getNodeByValue(parseInt(destinationValue));
-    rotations_log.push("Detect Selected Route: "+ sourceNode.value +" -> " + destinationNode.value);
 
-    // Detect Common ancestor
-    // Mark Common ancestor
-    commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
-    rotations_log.push("Detect Common Ancestor: " + commonAncestor.value);
-    updateLog(rotations_log, "rotationStepList");
-
-    animation_running = true;
 
     if(animationType === "step")
         switchAnimationButtonTo("step");
@@ -221,9 +220,28 @@ function switchNavbarElements(disable){
 function startAnimationPipeline(){
     disableStepAnimationButton();
 
+    // Detect Common ancestor
     commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
+
+    //Animate LCA and route
+    if(!rotating){
+        if(!routed){
+            // Mark Route
+            highlight_route(sourceNode, destinationNode, commonAncestor);
+            rotations_log.push("Detect Selected Route: "+ sourceNode.value +" -> " + destinationNode.value);
+            updateLog(rotations_log, "rotationStepList");
+
+        }else{
+            // Mark Common ancestor
+            initialCommonAncestor=commonAncestor;
+            change_highlight_from_route_to_lca(sourceNode, destinationNode, commonAncestor);
+            rotations_log.push("Detect Common Ancestor: " + commonAncestor.value);
+            updateLog(rotations_log, "rotationStepList");
+        }
+    }
+
     // Loop Until source node in ancestor spot
-    if(commonAncestor !== sourceNode){
+    else if(commonAncestor !== sourceNode){
         nextAnimationStep(sourceNode, commonAncestor);
     }
 
@@ -236,6 +254,7 @@ function startAnimationPipeline(){
     }
 
     else {
+        remove_lca_highlight(initialCommonAncestor)
         animation_complete();
         setSrcDestInfo(true);
     }
@@ -258,6 +277,26 @@ function nextAnimationStep(rootNode, targetNode) {
 
 let anim_finished = false;
 let rot_finished = false;
+
+
+function route_detection_finished_handler(){
+    routed = true;
+    finish_animation();
+    if(animationType === "auto" || animationType === "flow")
+        startAnimationPipeline();
+    else
+        enableStepAnimationButton();
+}
+
+function lca_detection_finished_handler(){
+    rotating = true;
+    finish_animation();
+    if(animationType === "auto" || animationType === "flow")
+        startAnimationPipeline();
+    else
+        enableStepAnimationButton();
+}
+
 
 function animation_finished_handler(){
     anim_finished = true;
@@ -284,7 +323,7 @@ function nextStep_Rotation(){
 }
 
 function animation_complete(){
-    //createSVGTree(tree)
+
     communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
     communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
     updateLog(communications_log, "communicationsList");
