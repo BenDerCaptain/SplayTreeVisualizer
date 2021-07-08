@@ -76,7 +76,7 @@
 
     <div id="logs" class="row">
         <div class="col">
-            <label class="badge bg-info d-flex">Animation Log</label>
+            <label class="badge bg-success d-flex">Animation Log</label>
             <div id="animationHist" class="overflow-auto logContainer border">
                 <ol id="rotationStepList" class="list-group list-group-numbered w-100">
 
@@ -84,7 +84,7 @@
             </div>
         </div>
         <div class="col">
-            <label class="badge bg-primary d-flex">Communication Log</label>
+            <label class="badge bg-success d-flex">Communication Log</label>
             <div id="communicationHist" class="overflow-auto logContainer border">
                 <ol id="communicationsList" class="list-group list-group-numbered w-100">
 
@@ -100,5 +100,105 @@
     </div>
 </div>
 
+<button class="btn btn-success btn-circle btn-help btn-lg me-2" id="helpButton" data-bs-toggle="modal" data-bs-target="#staticBackdrop" onclick="startAnimation()">?</button>
+<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="staticBackdropLabel">Info</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="container-fluid">
+                    <div id="helpCarousel" class="carousel carousel-dark slide" data-bs-interval="false">
+                        <div class="container"></div>
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <button class="carousel-control-prev" type="button" data-bs-target="#helpCarousel" data-bs-slide="prev">
+                                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Previous</span>
+                                    </button>
+                                </div>
+                                <div class="col-lg-8">
+                                    <div class="carousel-inner">
+                                        <div class="carousel-item active">
+                                            <div>
+                                                <h5>Navbar Information (1)</h5>
+                                                <ul>
+                                                    <li>Generate: Generates a tree, depending on the amount inputed in the field left to it</li>
+                                                    <li>Reset: Resets the current display to the initial balanced tree</li>
+                                                    <li>Save: Saves the current tree with all executed communications and allows to download the file</li>
+                                                    <li>Load: Loads a previously saved file, including executed communications</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="carousel-item">
+                                            <div >
+                                                <h5>Navbar Information (2)</h5>
+                                                <ul>
+                                                    <li>AnimationType: Select between different Animation Types:
+                                                        <ul>
+                                                            <li>Flow: Executes all animations after starting</li>
+                                                            <li>AutoFlow: Executes all animations after node selection</li>
+                                                            <li>Step-by-Step: Executes one animation per button-click</li>
+                                                        </ul>
+                                                    </li>
+                                                    <li>AnimationSpeed: Change the speed the animation plays with</li>
+                                                    <li>StartAnimation/StepAnimation: Stars the animation (step)</li>
+                                                    <li>Source/Destination: Displays the selected source and destination node</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="carousel-item">
+                                            <div>
+                                                <h5>Logs</h5>
+                                                <ul>
+                                                    <li>Animation Log: Displays all steps executed per animation</li>
+                                                    <li>Communication Log: Displays all executed communications on the current network</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div class="carousel-item">
+                                            <div>
+                                                <h5>Controlling the tree</h5>
+                                                <p>To execute an animation you have to execute the following steps</p>
+                                                <ol>
+                                                    <li>Hover over a (source) node</li>
+                                                    <li>Click and hold the left mouse button</li>
+                                                    <li>Drag and hover you mouse over another (destination) node</li>
+                                                    <li>Release the left mouse</li>
+                                                </ol>
+                                                <p>Completing this steps will select a source and destination node and display the intended communication.<br/>Additionally:</p>
+                                                <ol>
+                                                    <li>If applicable, click the start/step button to start/continue the animation</li>
+                                                    <li>Click and drag the middle mouse button to pan the display</li>
+                                                    <li>Use the mouse wheel to zoom into/out of the display</li>
+                                                </ol>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button class="carousel-control-next" type="button" data-bs-target="#helpCarousel" data-bs-slide="next">
+                                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                        <span class="visually-hidden">Next</span>
+                                    </button>
+                                </div>
+
+                            </div>
+                            <div class="row">
+                                <div class="carousel-indicators centered-indicators">
+                                    <button type="button" data-bs-target="#helpCarousel" class="help-indicator active" data-bs-slide-to="0" aria-current="true" aria-label="Slide 1"></button>
+                                    <button type="button" data-bs-target="#helpCarousel" class="help-indicator" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                                    <button type="button" data-bs-target="#helpCarousel" class="help-indicator" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                                    <button type="button" data-bs-target="#helpCarousel" class="help-indicator" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
