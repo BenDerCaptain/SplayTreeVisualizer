@@ -2,7 +2,7 @@
 <html lang="en-US">
 <head>
     <meta charset="utf-8">
-    <title>Basic JavaScript module example</title>
+    <title>SlayNet Visualizer</title>
     <style>
         canvas {
             border: 1px solid black;
@@ -22,86 +22,90 @@
 
 </head>
 <body onload="init()">
-<div class="container w-100">
-    <nav class="navbar navbar-expand-lg navbar-light sticky-top bg-light">
-        <div class="container-fluid">
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <a class="navbar-brand" href="#">Splaynet</a>
-            <div class="collapse navbar-collapse p-3" id="navbarToggler">
-                <div class=" d-inline-flex m-2 align-self-center">
-                    <input class="form-control me-2" placeholder="15" type="number" id="nodeCount"/>
-                    <button class="btn btn-outline-success me-2" type="button" id="generateTree" onclick="generateTree()">Generate</button>
-                    <button class="btn btn-outline-success me-2 text-nowrap" id="redrawTree" onclick="redrawTree()">Reset Tree</button>
-                </div>
-                <div class="m-2 align-self-center d-flex">
-                    <button class="btn btn-outline-success me-2" id="saveTree" onclick="saveTree()">Save</button>
-                    <button class="btn btn-outline-success me-2" id="loadTree" onclick="loadTree_click()">Load</button>
-                    <input style="display: none" type="file" name="treeFile" id="uploadFileName" accept="application/json,.json" onchange="handleFileUpload()"/>
-                </div>
-                <div class="m-2 align-self-center">
-                    <div>
-                        <label for="animationTypeSelection" class="navbar-text">AnimationType:</label>
+    <!-- Website body container -->
+    <div class="container w-100">
+        <!-- Navbar control -->
+        <nav class="navbar navbar-expand-lg navbar-light sticky-top bg-light">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggler" aria-controls="navbarToggler" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a class="navbar-brand" href="#">SplayNet</a>
+                <div class="collapse navbar-collapse p-3" id="navbarToggler">
+                    <div class=" d-inline-flex m-2 align-self-center">
+                        <input class="form-control me-2" placeholder="15" type="number" id="nodeCount"/>
+                        <button class="btn btn-outline-success me-2" type="button" id="generateTree" onclick="generateTree()">Generate</button>
+                        <button class="btn btn-outline-success me-2 text-nowrap" id="redrawTree" onclick="redrawTree()">Reset Tree</button>
                     </div>
-                    <div>
-                        <select id="animationTypeSelection" class="form-control" onchange="updateNavbarButtons()">
-                            <option value="flow">Flow</option>
-                            <option value="auto">AutoFlow</option>
-                            <option value="step">StepByStep</option>
-                        </select>
+                    <div class="m-2 align-self-center d-flex">
+                        <button class="btn btn-outline-success me-2" id="saveTree" onclick="saveTree()">Save</button>
+                        <button class="btn btn-outline-success me-2" id="loadTree" onclick="loadTree_click()">Load</button>
+                        <input style="display: none" type="file" name="treeFile" id="uploadFileName" accept="application/json,.json" onchange="handleFileUpload()"/>
+                    </div>
+                    <div class="m-2 align-self-center">
+                        <div>
+                            <label for="animationTypeSelection" class="navbar-text">AnimationType:</label>
+                        </div>
+                        <div>
+                            <select id="animationTypeSelection" class="form-control" onchange="updateNavbarButtons()">
+                                <option value="flow">Flow</option>
+                                <option value="auto">AutoFlow</option>
+                                <option value="step">StepByStep</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="m-2 align-self-center">
+                        <div >
+                            <label for="animationSpeed" class="navbar-text">AnimationSpeed:</label>
+                        </div>
+                        <div>
+                            <input type="range" class="form-range no-border" min="1" max="10" value="5" step="1" id="animationSpeed" onchange="changeSpeed()">
+                        </div>
+                    </div>
+                    <div class="m-2 align-self-center">
+                        <button class="btn btn-outline-success me-2" id="startAnimation" onclick="startAnimation()">StartAnimation</button>
+                        <button class="btn btn-outline-success me-2" id="stepAnimation" onclick="startAnimationPipeline()">StepAnimation</button>
+                    </div>
+                    <div class="m-2 align-self-center">
+                        <div id="SourceText" class="text-nowrap">Source: -</div>
+                        <div id="DestinationText" class="text-nowrap">Destination: -</div>
                     </div>
                 </div>
-                <div class="m-2 align-self-center">
-                    <div >
-                        <label for="animationSpeed" class="navbar-text">AnimationSpeed:</label>
-                    </div>
-                    <div>
-                        <input type="range" class="form-range no-border" min="1" max="10" value="5" step="1" id="animationSpeed" onchange="changeSpeed()">
-                    </div>
+            </div>
+        </nav>
+
+        <hr>
+
+        <div id="logs" class="row">
+            <div class="col">
+                <label class="badge bg-success d-flex">Communication Log</label>
+                <div id="communicationHist" class="overflow-auto logContainer border">
+                    <ol id="communicationsList" class="list-group list-group-numbered w-100">
+
+                    </ol>
                 </div>
-                <div class="m-2 align-self-center">
-                    <button class="btn btn-outline-success me-2" id="startAnimation" onclick="startAnimation()">StartAnimation</button>
-                    <button class="btn btn-outline-success me-2" id="stepAnimation" onclick="startAnimationPipeline()">StepAnimation</button>
-                </div>
-                <div class="m-2 align-self-center">
-                    <div id="SourceText" class="text-nowrap">Source: -</div>
-                    <div id="DestinationText" class="text-nowrap">Destination: -</div>
+            </div>
+            <div class="col">
+                <label class="badge bg-success d-flex">Animation Log</label>
+                <div id="animationHist" class="overflow-auto logContainer border">
+                    <ol id="animationStepList" class="list-group list-group-numbered w-100">
+
+                    </ol>
                 </div>
             </div>
         </div>
-    </nav>
 
-    <hr>
+        <hr>
 
-    <div id="logs" class="row">
-        <div class="col">
-            <label class="badge bg-success d-flex">Animation Log</label>
-            <div id="animationHist" class="overflow-auto logContainer border">
-                <ol id="rotationStepList" class="list-group list-group-numbered w-100">
+        <div id="SVGContainer" class="svg-wrapper border d-flex" onmouseup="checkSelected(event)">
 
-                </ol>
-            </div>
-        </div>
-        <div class="col">
-            <label class="badge bg-success d-flex">Communication Log</label>
-            <div id="communicationHist" class="overflow-auto logContainer border">
-                <ol id="communicationsList" class="list-group list-group-numbered w-100">
-
-                </ol>
-            </div>
         </div>
     </div>
 
-    <hr>
-
-    <div id="SVGContainer" class="svg-wrapper border d-flex" onmouseup="checkSelected(event)">
-
-    </div>
-</div>
-
-<button class="btn btn-success btn-circle btn-help btn-lg me-2" id="helpButton" data-bs-toggle="modal" data-bs-target="#staticBackdrop">?</button>
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <!-- Assist/Help button -->
+    <button class="btn btn-success btn-circle btn-help btn-lg me-2" id="helpButton" data-bs-toggle="modal" data-bs-target="#staticBackdrop">?</button>
+    <!-- Assist/Help panels -->
+    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">

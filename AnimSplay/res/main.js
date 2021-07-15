@@ -3,8 +3,9 @@ let tree;
 let animationSpeed = 1.0;
 let animationType;
 let communications = [];
-let communications_log = [];
-let rotations_log = [];
+let animations = [];
+let counter_animationStep = 0;
+let counter_communications = 0;
 
 function init(){
     initSVG(500,1000);
@@ -60,11 +61,10 @@ function redrawTree(){
 function clearLogs(){
 
     communications = [];
-    communications_log = [];
-    rotations_log = [];
+    animations = [];
 
-    updateLog(communications_log, "communicationsList");
-    updateLog(rotations_log, "rotationStepList");
+    updateLog(communications, "communicationsList");
+    updateLog(animations, "animationStepList");
 
 }
 
@@ -74,7 +74,8 @@ function saveTree(){
 
     let jsonObject = {
         "tree_size": nodesToGenerate,
-        "communications": communications
+        "communications": communications,
+        "animations" : animations
     }
     let blob = new Blob([JSON.stringify(jsonObject)], {type: "application/json;charset=utf-8"});
     a.href = URL.createObjectURL(blob);
@@ -98,7 +99,9 @@ function handleFileUpload(){
 
     fr.onload = function (obj){
         let treeData = JSON.parse(obj.target.result);
-        if(!treeData.hasOwnProperty('tree_size') || !treeData.hasOwnProperty('communications')) return;
+        if(!treeData.hasOwnProperty('tree_size') ||
+           !treeData.hasOwnProperty('communications') ||
+           !treeData.hasOwnProperty('animations')) return;
         loadTreeStatusFromFileData(treeData);
     }
 
@@ -106,12 +109,12 @@ function handleFileUpload(){
 }
 
 function loadTreeStatusFromFileData(data){
-    communications_log = [];
-    rotations_log = [];
-    communications = [];
+    clearLogs();
 
     nodesToGenerate = data["tree_size"];
     tree = new SplayTree(nodesToGenerate);
+
+    animations = data["animations"];
 
     communications = data["communications"];
     communications.forEach(function(item){
@@ -119,7 +122,6 @@ function loadTreeStatusFromFileData(data){
         destinationNode = tree.getNodeByValue(parseInt(item["destination"]));
         while(commonAncestor !== sourceNode){
             commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
-            console.log(commonAncestor);
             ////// Detect Step
             let step = tree.getNextRotationStep(sourceNode, commonAncestor);
             ////// Execute Step
@@ -140,10 +142,10 @@ function loadTreeStatusFromFileData(data){
 
         anim_finished = false;
         rot_finished = false;
-        communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
-
+        counter_communications++;
     })
-    updateLog(communications_log, "communicationsList");
+    updateLog(communications, "communicationsList");
+    updateLog(animations, "animationStepList")
     createSVGTree(tree);
 }
 
@@ -163,8 +165,10 @@ let routed;
 
 function startAnimation(){
 
-    delete_communication_line()
-    rotations_log = [];
+    delete_communication_line();
+
+    counter_communications++;
+    counter_animationStep = 0;
     rotating = false;
     routed = false;
 
@@ -220,6 +224,7 @@ function switchNavbarElements(disable){
 function startAnimationPipeline(){
     disableStepAnimationButton();
 
+    counter_animationStep++;
     // Detect Common ancestor
     commonAncestor = tree.getCommonAncestor(sourceNode, destinationNode);
 
@@ -228,15 +233,21 @@ function startAnimationPipeline(){
         if(!routed){
             // Mark Route
             highlight_route(sourceNode, destinationNode, commonAncestor);
-            rotations_log.push("Detect Selected Route: "+ sourceNode.value +" -> " + destinationNode.value);
-            updateLog(rotations_log, "rotationStepList");
+            animations.push(createAnimationStepObject((counter_communications+"."+counter_animationStep),
+                                                       counter_communications,
+                                                       counter_animationStep,
+                                                       "Detect Selected Route: "+ sourceNode.value +" -> " + destinationNode.value));
+            updateLog(animations, "animationStepList");
 
         }else{
             // Mark Common ancestor
             initialCommonAncestor=commonAncestor;
             change_highlight_from_route_to_lca(sourceNode, destinationNode, commonAncestor);
-            rotations_log.push("Detect Common Ancestor: " + commonAncestor.value);
-            updateLog(rotations_log, "rotationStepList");
+            animations.push(createAnimationStepObject((counter_communications+"."+counter_animationStep),
+                                                       counter_communications,
+                                                       counter_animationStep,
+                                                       "Detect Common Ancestor: " + commonAncestor.value));
+            updateLog(animations, "animationStepList");
         }
     }
 
@@ -265,8 +276,11 @@ function nextAnimationStep(rootNode, targetNode) {
     ////// Detect Step
     let step = tree.getNextRotationStep(rootNode, targetNode);
     ////// Log Step
-    rotations_log.push("Execute " + step + " on Node " + rootNode.value);
-    updateLog(rotations_log, "rotationStepList");
+    animations.push(createAnimationStepObject((counter_communications+"."+counter_animationStep),
+                                               counter_communications,
+                                               counter_animationStep,
+                                               "Execute " + step + " on Node " + rootNode.value));
+    updateLog(animations, "animationStepList");
     ////// Execute Step
     if (step !== "DONE") {
         stepAnimation(step, rootNode);
@@ -324,9 +338,11 @@ function nextStep_Rotation(){
 
 function animation_complete(){
 
-    communications.push({"source" : sourceNode.value.toString(), "destination" : destinationNode.value.toString()});
-    communications_log.push("Communication: " + sourceNode.value + " -> " + destinationNode.value);
-    updateLog(communications_log, "communicationsList");
+    communications.push(createCommunicationObject(counter_communications,
+                                                   sourceNode.value.toString(),
+                                                   destinationNode.value.toString(),
+                                                   "Communication: " + sourceNode.value + " -> " + destinationNode.value));
+    updateLog(communications, "communicationsList");
 
     switchAnimationButtonTo("start");
     switchNavbarElements(false);
@@ -380,21 +396,46 @@ function updateLog(log, ordered_list){
     ol.innerHTML = "";
     let temp = [...log];
     //rewrite
-    temp.reverse().forEach(function (item, index){
-        updateOrderedList(item, index, log.length ,ol);
+    temp.reverse().forEach(function (item){
+        updateOrderedList(item ,ol);
     })
 }
 
-function updateOrderedList(item, index, logLength, ol){
+function updateOrderedList(item, ol){
     let li = document.createElement('li');
-    if(index === 0){
+    if(
+        (item["id"] === counter_communications) ||
+        (item.hasOwnProperty("animationStepID") &&
+         item["communicationID"] === counter_communications &&
+         item["animationStepID"] === counter_animationStep))
+    {
         let b = document.createElement('b');
-        b.textContent = item.toString();
+        b.textContent = item["description"];
         li.append(b);
-    }else{
-        li.textContent = item.toString();
+    } else {
+        li.textContent = item["description"];
     }
-    li.setAttribute("value",logLength-index);
+    li.setAttribute("value", item["id"].toString());
     li.setAttribute("class", "list-group-item");
     ol.append(li);
+}
+
+function createCommunicationObject(id, source, destination, description){
+    let obj = {
+        "id" : id,
+        "source" : source,
+        "destination" : destination,
+        "description" : description
+    };
+    return obj;
+}
+
+function createAnimationStepObject(id, communicationID, animationStepID, description){
+    let obj = {
+        "id" : id,
+        "communicationID" : communicationID,
+        "animationStepID" : animationStepID,
+        "description" : description
+    };
+    return obj;
 }
