@@ -16,6 +16,8 @@ function init(){
     addEventListener('route_detection_finished', this.route_detection_finished_handler);
     addEventListener('lca_detection_finished', this.lca_detection_finished_handler);
 
+    document.getElementById("SVGContainer").addEventListener('contextmenu', event => event.preventDefault())
+
     test1();
     //test2()
 
@@ -56,6 +58,10 @@ function redrawTree(){
     createSVGTree(tree);
     switchAnimationButtonTo("start");
     switchNavbarElements(false);
+}
+
+function switchZoom(sender){
+    pointZoomOn = sender.checked;
 }
 
 function clearLogs(){

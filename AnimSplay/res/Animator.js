@@ -2,43 +2,70 @@ let draw;
 let width;
 let height;
 let CIRCLE_DIAMETER = 20;
-let CIRCLE_RADIUS = CIRCLE_DIAMETER/2;
 let MARGIN_TOP = 20;
 
 //Used Coloring Schema
 let COLOR_NODE_BASE = '#00278B';
 let COLOR_NODE_ANIMATED = '#6c92ff';
-let COLOR_NODE_SELECTED = '#d6ae28';
-let COLOR_NODE_LCA = '#9ff50b';
+let COLOR_NODE_SELECTED = '#aa8910';
+let COLOR_NODE_LCA = '#ce5610';
 let COLOR_LINE_BASE = '#cdcdcd';
 let COLOR_LINE_COMMUNICATION = '#19b81a';
 let COLOR_LINE_PATH = '#d22222';
 let COLOR_NODE_BORDER = '#0a0f15';
 let COLOR_NODE_HOVER = '#ea1212';
 let COLOR_TEXT_BASE = '#ffffff';
-let COLOR_TEXT_HOVER ='#ffffff'
+let COLOR_TEXT_HOVER ='#ffffff';
 
 //SelectionValues And communication Line
 let SelectedSource = -1;
 let SelectedDestination = -1;
 
-let x_pos_src_communication_line = 0
-let y_pos_src_communication_line = 0
-let x_pos_dest_communication_line = 0
-let y_pos_dest_communication_line = 0
+let x_pos_src_communication_line = 0;
+let y_pos_src_communication_line = 0;
+let x_pos_dest_communication_line = 0;
+let y_pos_dest_communication_line = 0;
 
-let is_drawing = false
+let is_drawing = false;
 
+//Pan and zoom values
+let def_panButton = 2;
+let def_zoomFactor = 0.25;
+let def_zoomMin = 0.1;
+let def_zoomMax = 5;
+let def_currentZoom = 1;
+
+let pointZoomOn = false;
 
 function initSVG(heightVal, widthVal){
     width = widthVal;
     height = heightVal;
-    let svg = SVG().addTo('#SVGContainer').panZoom({panButton: 1}).id("SVGViewbox");
+    let svg = SVG()
+        .addTo('#SVGContainer')
+        .panZoom({panButton: def_panButton, wheelZoom: false, zoomFactor: def_zoomFactor, zoomMin:def_zoomMin, zoomMax:def_zoomMax})
+        .id("SVGViewbox");
     draw = svg.viewbox(0, 0, width, height);
 
     draw.on('mousemove', redraw_line)
         .on('mouseup', stop_redraw_line)
 
+    draw.on('wheel', zoom);
+}
+
+function zoom(event){
+    event.preventDefault();
+    let factor = event.deltaY >= 0? -1:1;
+    def_currentZoom += factor * def_zoomFactor * def_currentZoom;
+    if(def_currentZoom >= def_zoomMax) def_currentZoom = def_zoomMax;
+    else if(def_currentZoom <=def_zoomMin) def_currentZoom = def_zoomMin;
+
+    if(pointZoomOn){
+        let point = draw.point(event.x, event.y)
+        draw.zoom(def_currentZoom, {x: point.x ,y: point.y})
+    }
+    else{
+        draw.zoom(def_currentZoom);
+    }
 }
 
 function redraw_line(event){
