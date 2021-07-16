@@ -68,6 +68,24 @@ function zoom(event){
     }
 }
 
+function resetTreeToCenter(){
+    let svg = SVG("#SVGViewbox");
+    let size = draw.node.viewBox.baseVal;
+    let half_width = size.width / 2.0;
+    let half_height = size.height / 2.0;
+
+    let innerBBox = SVG("#nodeGroup").bbox();
+    let inner_half_height = innerBBox.height / 2.0;
+    console.log(innerBBox)
+    //take exact half of width == 1000/2
+    let width_diff = (500 - half_width) ;
+    //add margin times two (top/bot)
+    let height_diff = (inner_half_height - half_height) +40;
+
+    let box = new SVG.Box(width_diff , height_diff, size.width, size.height)
+    svg.viewbox(box)
+}
+
 function redraw_line(event){
     if(!is_drawing) return;
     let point = draw.point(event.x, event.y)

@@ -45,13 +45,14 @@ function generateTree(){
 
     if (nodesToGenerate < 0)
         return;
-
     redrawTree();
+    resetTreeToCenter()
     switchAnimationButtonTo("start");
     switchNavbarElements(false);
 }
 
 function redrawTree(){
+    resetTreeToCenter();
     clearLogs();
     finish_animation();
     tree = new SplayTree(nodesToGenerate);
