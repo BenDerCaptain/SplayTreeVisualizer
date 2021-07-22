@@ -7,6 +7,7 @@ let animations = [];
 let counter_animationStep = 0;
 let counter_communications = 0;
 
+//Setup
 function init(){
     initSVG(500,1000);
     updateNavbarButtons();
@@ -18,25 +19,13 @@ function init(){
 
     document.getElementById("SVGContainer").addEventListener('contextmenu', event => event.preventDefault())
 
-    test1();
-    //test2()
+    generateTree();
 
 }
 
-function test1(){
-    tree = new SplayTree(15);
-    createSVGTree(tree);
-}
+//Navbar-Elements Controls
 
-function test2(){
-    set_timeline_speed(10);
-    SelectedSource = 6;
-    SelectedDestination = 4;
-    animationType = "auto";
-    checkSelected();
-}
-
-
+//Generate
 function generateTree(){
     nodesToGenerate = $("#nodeCount").prop('value');
 
@@ -46,35 +35,20 @@ function generateTree(){
     if (nodesToGenerate < 0)
         return;
     redrawTree();
-    resetTreeToCenter()
-    switchAnimationButtonTo("start");
-    switchNavbarElements(false);
 }
 
+//Reset Tree
 function redrawTree(){
-    resetTreeToCenter();
     clearLogs();
     finish_animation();
     tree = new SplayTree(nodesToGenerate);
     createSVGTree(tree);
+    resetTreeToCenter();
     switchAnimationButtonTo("start");
     switchNavbarElements(false);
 }
 
-function switchZoom(sender){
-    pointZoomOn = sender.checked;
-}
-
-function clearLogs(){
-
-    communications = [];
-    animations = [];
-
-    updateLog(communications, "communicationsList");
-    updateLog(animations, "animationStepList");
-
-}
-
+//Save
 function saveTree(){
 
     let a = document.createElement("a");
@@ -92,10 +66,13 @@ function saveTree(){
 
 }
 
+//Load
+////Load: FileSelect
 function loadTree_click(){
     document.getElementById("uploadFileName").click();
 }
 
+////Load: Read File Data
 function handleFileUpload(){
     let file = document.getElementById("uploadFileName").files[0];
 
@@ -107,14 +84,15 @@ function handleFileUpload(){
     fr.onload = function (obj){
         let treeData = JSON.parse(obj.target.result);
         if(!treeData.hasOwnProperty('tree_size') ||
-           !treeData.hasOwnProperty('communications') ||
-           !treeData.hasOwnProperty('animations')) return;
+            !treeData.hasOwnProperty('communications') ||
+            !treeData.hasOwnProperty('animations')) return;
         loadTreeStatusFromFileData(treeData);
     }
 
     fr.readAsText(file);
 }
 
+////Load: Execute File Rotations
 function loadTreeStatusFromFileData(data){
     clearLogs();
 
@@ -156,13 +134,90 @@ function loadTreeStatusFromFileData(data){
     createSVGTree(tree);
 }
 
+//AnimationType (Includes update of navbar buttons and labels)
+function updateNavbarButtons(){
+    animationType = $("#animationTypeSelection").prop('value');
+    switch (animationType){
+        case "auto":
+            $("#startAnimation").css('display',"none");
+            $("#stepAnimation").css('display', "none");
+            break;
+        case "flow":
+            $("#startAnimation").css('display',"block");
+            $("#stepAnimation").css('display', "none");
+            break;
+        case "step":
+            $("#startAnimation").css('display',"block");
+            $("#stepAnimation").css('display', "none");
+            break;
+    }
 
+    setSrcDestInfo(true);
+}
+
+//AnimationSpeed
 function changeSpeed(){
     let speed = document.getElementById("animationSpeed").value;
     animationSpeed = speed / 5;
     set_timeline_speed(animationSpeed);
 }
 
+function switchZoom(sender){
+    pointZoomOn = sender.checked;
+}
+
+//FE Update
+
+////Disable navbar Elements "hurtful" to the animation process
+function switchNavbarElements(disable){
+    $("#saveTree").prop( "disabled", disable );
+    $("#loadTree").prop( "disabled", disable );
+    $("#animationTypeSelection").prop( "disabled", disable );
+    $("#startAnimation").prop( "disabled", disable );
+}
+
+////Disable the stepAnimation Button
+function disableStepAnimationButton() {
+    $("#stepAnimation").prop("disabled", true);
+}
+
+////Enable the stepAnimation Button
+function enableStepAnimationButton() {
+    $("#stepAnimation").prop("disabled", false);
+}
+
+////Swap button visibility for Start and Step Button (only in Step mode)
+function switchAnimationButtonTo(string){
+
+    if(string === "step"){
+        $("#startAnimation").css('display',"none");
+        $("#stepAnimation").css('display', "block");
+    } else if (string === "start"){
+        $("#startAnimation").css('display',"block");
+        $("#stepAnimation").css('display', "none");
+    }
+
+}
+
+////Update Source and Destination Info in Navbar
+function setSrcDestInfo(shall_reset){
+    if(shall_reset) reset();
+    $("#SourceText").text("Source : " + getSelectedSource());
+    $("#DestinationText").text("Destination : " + getSelectedDestination());
+}
+
+////Clear Log content and update FE
+function clearLogs(){
+
+    communications = [];
+    animations = [];
+
+    updateLog(communications, "communicationsList");
+    updateLog(animations, "animationStepList");
+
+}
+
+//Data and Animation Control
 let sourceNode;
 let destinationNode;
 let commonAncestor;
@@ -170,6 +225,7 @@ let initialCommonAncestor;
 let rotating;
 let routed;
 
+////Starts the animation by setting up values and the frontend
 function startAnimation(){
 
     delete_communication_line();
@@ -190,7 +246,6 @@ function startAnimation(){
     sourceNode = tree.getNodeByValue(parseInt(sourceValue));
     destinationNode = tree.getNodeByValue(parseInt(destinationValue));
 
-
     if(animationType === "step")
         switchAnimationButtonTo("step");
     switchNavbarElements(true);
@@ -200,34 +255,10 @@ function startAnimation(){
     startAnimationPipeline();
 }
 
-function switchAnimationButtonTo(string){
-
-    if(string === "step"){
-        $("#startAnimation").css('display',"none");
-        $("#stepAnimation").css('display', "block");
-    } else if (string === "start"){
-        $("#startAnimation").css('display',"block");
-        $("#stepAnimation").css('display', "none");
-    }
-
-}
-
-function disableStepAnimationButton() {
-    $("#stepAnimation").prop("disabled", true);
-}
-
-function enableStepAnimationButton() {
-    $("#stepAnimation").prop("disabled", false);
-}
-
-function switchNavbarElements(disable){
-    $("#saveTree").prop( "disabled", disable );
-    $("#loadTree").prop( "disabled", disable );
-    $("#animationTypeSelection").prop( "disabled", disable );
-    $("#startAnimation").prop( "disabled", disable );
-}
-
-
+////Executes an animation Step, to allow step animation.
+//// Firstly the Route from Source to Destination will be highlighted
+//// Secondly the highlight switches from the Route tot the Least Common Ancestor
+//// Afterwards every step includes animating the rotations of the tree
 function startAnimationPipeline(){
     disableStepAnimationButton();
 
@@ -279,6 +310,7 @@ function startAnimationPipeline(){
 
 }
 
+////Animation detection from one node (to animated) and another one (the targeted destination, lca or child of lca)
 function nextAnimationStep(rootNode, targetNode) {
     ////// Detect Step
     let step = tree.getNextRotationStep(rootNode, targetNode);
@@ -296,10 +328,28 @@ function nextAnimationStep(rootNode, targetNode) {
 
 }
 
+////Finalizes the animation by updating the logs and activating FE elements again
+function animation_complete(){
+
+    communications.push(createCommunicationObject(counter_communications,
+        sourceNode.value.toString(),
+        destinationNode.value.toString(),
+        "Communication: " + sourceNode.value + " -> " + destinationNode.value));
+    updateLog(communications, "communicationsList");
+
+    switchAnimationButtonTo("start");
+    switchNavbarElements(false);
+
+    enableNodeMouseEvents();
+
+}
+
+//Animation Event Handlers
+//After each animation step there might be events that fire and need to be handled differently
 let anim_finished = false;
 let rot_finished = false;
 
-
+////Fires after route was detected and highlighted
 function route_detection_finished_handler(){
     routed = true;
     finish_animation();
@@ -309,6 +359,7 @@ function route_detection_finished_handler(){
         enableStepAnimationButton();
 }
 
+////Fires after LCA was highlighted
 function lca_detection_finished_handler(){
     rotating = true;
     finish_animation();
@@ -318,18 +369,19 @@ function lca_detection_finished_handler(){
         enableStepAnimationButton();
 }
 
-
+////Fires after the current animation step was completed
 function animation_finished_handler(){
     anim_finished = true;
     nextStep_Rotation();
 }
 
+////Fires after the in memory rotation has finished
 function rotation_finished_handler(){
     rot_finished = true;
     nextStep_Rotation();
-
 }
 
+////Prepares the event variables for the next step
 function nextStep_Rotation(){
     if(anim_finished && rot_finished){
         rot_finished = false;
@@ -343,41 +395,8 @@ function nextStep_Rotation(){
     }
 }
 
-function animation_complete(){
-
-    communications.push(createCommunicationObject(counter_communications,
-                                                   sourceNode.value.toString(),
-                                                   destinationNode.value.toString(),
-                                                   "Communication: " + sourceNode.value + " -> " + destinationNode.value));
-    updateLog(communications, "communicationsList");
-
-    switchAnimationButtonTo("start");
-    switchNavbarElements(false);
-
-    enableNodeMouseEvents();
-
-}
-
-function updateNavbarButtons(){
-    animationType = $("#animationTypeSelection").prop('value');
-    switch (animationType){
-        case "auto":
-            $("#startAnimation").css('display',"none");
-            $("#stepAnimation").css('display', "none");
-            break;
-        case "flow":
-            $("#startAnimation").css('display',"block");
-            $("#stepAnimation").css('display', "none");
-            break;
-        case "step":
-            $("#startAnimation").css('display',"block");
-            $("#stepAnimation").css('display', "none");
-            break;
-    }
-
-    setSrcDestInfo(true);
-}
-
+//Mouse Events
+////On mouse up check if both source and destination were selected
 function checkSelected(event){
     if(event.button !== 0) return;
     let valid = true;
@@ -391,11 +410,32 @@ function checkSelected(event){
 
     if(valid && animationType === "auto") startAnimation();
 }
-function setSrcDestInfo(shall_reset){
-    if(shall_reset) reset();
-    $("#SourceText").text("Source : " + getSelectedSource());
-    $("#DestinationText").text("Destination : " + getSelectedDestination());
+
+
+//Logging
+
+//Create Log Objects
+function createCommunicationObject(id, source, destination, description){
+    let obj = {
+        "id" : id,
+        "source" : source,
+        "destination" : destination,
+        "description" : description
+    };
+    return obj;
 }
+
+function createAnimationStepObject(id, communicationID, animationStepID, description){
+    let obj = {
+        "id" : id,
+        "communicationID" : communicationID,
+        "animationStepID" : animationStepID,
+        "description" : description
+    };
+    return obj;
+}
+
+//Update Log Lists
 function updateLog(log, ordered_list){
 
     //remove Log FE
@@ -425,24 +465,4 @@ function updateOrderedList(item, ol){
     li.setAttribute("value", item["id"].toString());
     li.setAttribute("class", "list-group-item");
     ol.append(li);
-}
-
-function createCommunicationObject(id, source, destination, description){
-    let obj = {
-        "id" : id,
-        "source" : source,
-        "destination" : destination,
-        "description" : description
-    };
-    return obj;
-}
-
-function createAnimationStepObject(id, communicationID, animationStepID, description){
-    let obj = {
-        "id" : id,
-        "communicationID" : communicationID,
-        "animationStepID" : animationStepID,
-        "description" : description
-    };
-    return obj;
 }

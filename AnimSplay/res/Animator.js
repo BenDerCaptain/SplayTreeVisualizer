@@ -1,3 +1,4 @@
+//Setup Values
 let draw;
 let width;
 let height;
@@ -37,6 +38,7 @@ let def_currentZoom = 1;
 
 let pointZoomOn = false;
 
+//Init tree
 function initSVG(heightVal, widthVal){
     width = widthVal;
     height = heightVal;
@@ -50,79 +52,6 @@ function initSVG(heightVal, widthVal){
         .on('mouseup', stop_redraw_line)
 
     draw.on('wheel', zoom);
-}
-
-function zoom(event){
-    event.preventDefault();
-    let factor = event.deltaY >= 0? -1:1;
-    def_currentZoom += factor * def_zoomFactor * def_currentZoom;
-    if(def_currentZoom >= def_zoomMax) def_currentZoom = def_zoomMax;
-    else if(def_currentZoom <=def_zoomMin) def_currentZoom = def_zoomMin;
-
-    if(pointZoomOn){
-        let point = draw.point(event.x, event.y)
-        draw.zoom(def_currentZoom, {x: point.x ,y: point.y})
-    }
-    else{
-        draw.zoom(def_currentZoom);
-    }
-}
-
-function resetTreeToCenter(){
-    let svg = SVG("#SVGViewbox");
-    let size = draw.node.viewBox.baseVal;
-    let half_width = size.width / 2.0;
-    let half_height = size.height / 2.0;
-
-    let innerBBox = SVG("#nodeGroup").bbox();
-    let inner_half_height = innerBBox.height / 2.0;
-    console.log(innerBBox)
-    //take exact half of width == 1000/2
-    let width_diff = (500 - half_width) ;
-    //add margin times two (top/bot)
-    let height_diff = (inner_half_height - half_height) +40;
-
-    let box = new SVG.Box(width_diff , height_diff, size.width, size.height)
-    svg.viewbox(box)
-}
-
-function redraw_line(event){
-    if(!is_drawing) return;
-    let point = draw.point(event.x, event.y)
-
-    x_pos_dest_communication_line = point.x;
-    y_pos_dest_communication_line = point.y;
-    draw_communication_line();
-}
-
-function stop_redraw_line(event){
-    if(event.button !== 0) return;
-    is_drawing = false
-}
-
-function draw_communication_line(){
-    let line = SVG("#comm_line")
-    if(line === null){
-        let lines = SVG("#lineGroup")
-        lines
-            .line(x_pos_src_communication_line,
-                y_pos_src_communication_line,
-                x_pos_dest_communication_line,
-                y_pos_dest_communication_line)
-            .id("comm_line")
-            .stroke({ color: COLOR_LINE_COMMUNICATION, width: 6});
-    }else{
-        line.attr({ x1:x_pos_src_communication_line,
-                    y1: y_pos_src_communication_line,
-                    x2:x_pos_dest_communication_line,
-                    y2: y_pos_dest_communication_line});
-    }
-}
-
-function delete_communication_line(){
-    let line = SVG("#comm_line");
-    if(line !== null)
-        line.remove();
 }
 
 function createSVGTree(splayTree){
@@ -182,14 +111,10 @@ function create_lines(lineGroup, x_position, half_width, y_level, node){
     }
 }
 
-function getSelectedSource(){
-    return SelectedSource;
-}
 
-function getSelectedDestination(){
-    return SelectedDestination;
-}
+//Events
 
+//// Source Selection
 function selectSource(event){
     if(event.button !== 0) return;
 
@@ -204,6 +129,11 @@ function selectSource(event){
     y_pos_dest_communication_line = this.cy();
 }
 
+function getSelectedSource(){
+    return SelectedSource;
+}
+
+//// Destination Selection
 function selectDestination(event){
     if(event.button !== 0) return;
     is_drawing = false;
@@ -214,16 +144,28 @@ function selectDestination(event){
     draw_communication_line();
 }
 
-function disableNodeMouseEvents(){
-    let nodeGroup = SVG("#nodeGroup");
-    nodeGroup.children().forEach(child => child.css("pointer-events", "none"));
+function getSelectedDestination(){
+    return SelectedDestination;
 }
 
-function enableNodeMouseEvents(){
-    let nodeGroup = SVG("#nodeGroup");
-    nodeGroup.children().forEach(child => child.css("pointer-events", "visiblePainted"));
+////Zoom handling
+function zoom(event){
+    event.preventDefault();
+    let factor = event.deltaY >= 0? -1:1;
+    def_currentZoom += factor * def_zoomFactor * def_currentZoom;
+    if(def_currentZoom >= def_zoomMax) def_currentZoom = def_zoomMax;
+    else if(def_currentZoom <=def_zoomMin) def_currentZoom = def_zoomMin;
+
+    if(pointZoomOn){
+        let point = draw.point(event.x, event.y)
+        draw.zoom(def_currentZoom, {x: point.x ,y: point.y})
+    }
+    else{
+        draw.zoom(def_currentZoom);
+    }
 }
 
+////Change nodes appearence on mouse over
 function mouseOver(){
     this.fill(COLOR_NODE_HOVER);
     this.size(25);
@@ -234,6 +176,7 @@ function mouseOver(){
 
 }
 
+////Reset nodes appearance to before mouse-enter event
 function mouseOut(){
     let nodeValue = this.attr("node-value")
     if(nodeValue === SelectedSource ||nodeValue === SelectedDestination){
@@ -248,6 +191,32 @@ function mouseOut(){
     hovered_text.font({weight:"normal", fill:COLOR_TEXT_BASE});
 }
 
+////Communication line continuous drawing
+function redraw_line(event){
+    if(!is_drawing) return;
+    let point = draw.point(event.x, event.y)
+
+    x_pos_dest_communication_line = point.x;
+    y_pos_dest_communication_line = point.y;
+    draw_communication_line();
+}
+
+////Stop continuous drawing when mouse is not pressed
+function stop_redraw_line(event){
+    if(event.button !== 0) return;
+    is_drawing = false
+}
+
+//Visualization Support Function
+
+////Rebuild Connector lines
+function instant_rebuild_lines(tree){
+    let lines_group_node = SVG("#lineGroup");
+    lines_group_node.children().forEach(child => child.remove());
+    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
+}
+
+////Reset Selected Source and Destination
 function reset(){
     delete_communication_line();
     let src_node = '#node_'+SelectedSource;
@@ -264,13 +233,65 @@ function reset_node_color(node){
         node.attr('fill', COLOR_NODE_BASE)
 }
 
-function instant_rebuild_lines(tree){
-    let lines_group_node = SVG("#lineGroup");
-    lines_group_node.children().forEach(child => child.remove());
-    create_lines(lines_group_node, width/2.0, width/2.0, 0, tree.root);
+//Center Tree in SVG on reset tree click
+function resetTreeToCenter(){
+    let svg = SVG("#SVGViewbox");
+    let size = draw.node.viewBox.baseVal;
+    let half_width = size.width / 2.0;
+    let half_height = size.height / 2.0;
+
+    let innerBBox = SVG("#nodeGroup").bbox();
+    let inner_half_height = innerBBox.height / 2.0;
+    //take exact half of width == 1000/2
+    let width_diff = (500 - half_width) ;
+    //add margin times two (top/bot)
+    let height_diff = (inner_half_height - half_height) +40;
+
+    let box = new SVG.Box(width_diff , height_diff, size.width, size.height)
+    svg.viewbox(box)
 }
 
-//Animation Start
+////draw static communication line after selection
+function draw_communication_line(){
+    let line = SVG("#comm_line")
+    if(line === null){
+        let lines = SVG("#lineGroup")
+        lines
+            .line(x_pos_src_communication_line,
+                y_pos_src_communication_line,
+                x_pos_dest_communication_line,
+                y_pos_dest_communication_line)
+            .id("comm_line")
+            .stroke({ color: COLOR_LINE_COMMUNICATION, width: 6});
+    }else{
+        line.attr({ x1:x_pos_src_communication_line,
+            y1: y_pos_src_communication_line,
+            x2:x_pos_dest_communication_line,
+            y2: y_pos_dest_communication_line});
+    }
+}
+
+////delete static communication line before animation
+function delete_communication_line(){
+    let line = SVG("#comm_line");
+    if(line !== null)
+        line.remove();
+}
+
+////Disable Mouse events when animating
+function disableNodeMouseEvents(){
+    let nodeGroup = SVG("#nodeGroup");
+    nodeGroup.children().forEach(child => child.css("pointer-events", "none"));
+}
+
+////Enable mouse events when animation finished
+function enableNodeMouseEvents(){
+    let nodeGroup = SVG("#nodeGroup");
+    nodeGroup.children().forEach(child => child.css("pointer-events", "visiblePainted"));
+}
+
+
+//Animation Code
 let timeline = new SVG.Timeline();
 let animation_speed = 1;
 let start_time = 0;
@@ -281,7 +302,7 @@ function set_timeline_speed(new_speed){
 }
 
 function stepAnimation(step, sourceNode) {
-    console.log(step + " rotation");
+
     //setup timeline
 
     let is_left_child = (sourceNode.parent.leftChild === sourceNode);
@@ -324,6 +345,7 @@ function finish_animation(){
     start_time = 0;
 }
 
+//Highlighting
 function highlight_route(srcNode, destNode, commonAncestor){
     let lineList = get_lines_from_nodes(srcNode, destNode, commonAncestor);
 
@@ -400,7 +422,6 @@ function remove_lca_highlight(commonAncestor){
 // Zig's Animation code
 
 function zag(nodeToRotate, timeline, start_time) {
-    console.log("zag rotation");
     //      x, p... Nodes
     //      A, B, C... Subtrees
     //
@@ -471,7 +492,6 @@ function zag(nodeToRotate, timeline, start_time) {
 }
 
 function zig(nodeToRotate, timeline, start_time) {
-    console.log("zig rotation");
     //      x, p... Nodes
     //      A, B, C... Subtrees
     //
@@ -547,7 +567,6 @@ function zig(nodeToRotate, timeline, start_time) {
 }
 
 function zagzag(nodeToRotate, timeline, start_time) {
-    console.log("zagzag rotation");
 
     //      x, p, g... Nodes
     //      A, B, C, D... Subtrees
@@ -716,8 +735,6 @@ function zagzag(nodeToRotate, timeline, start_time) {
 
 function zigzig(nodeToRotate, timeline, start_time) {
 
-    console.log("zigzig rotation");
-
     //      x, p, g... Nodes
     //      A, B, C, D... Subtrees
     //
@@ -885,7 +902,6 @@ function zigzig(nodeToRotate, timeline, start_time) {
 }
 
 function zagzig(nodeToRotate, timeline, start_time) {
-    console.log("zagzig rotation");
 
     //      x, p, g... Nodes
     //      A, B, C, D... Subtrees
@@ -1059,7 +1075,6 @@ function zagzig(nodeToRotate, timeline, start_time) {
 }
 
 function zigzag(nodeToRotate, timeline, start_time) {
-    console.log("zigzag rotation");
 
     //      x, p, g... Nodes
     //      A, B, C, D... Subtrees
@@ -1231,6 +1246,7 @@ function zigzag(nodeToRotate, timeline, start_time) {
     return start_time;
 }
 
+//Sub animations for zigs
 function moveSubTree_recursionStart(timeline, start_time, node, y_level, target_xpos,  side = "left" ){
     if (node !== null) {
         let id = "#node_" + node.value;
