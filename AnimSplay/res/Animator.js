@@ -34,7 +34,8 @@ let def_panButton = 2;
 let def_zoomFactor = 0.25;
 let def_zoomMin = 0.1;
 let def_zoomMax = 5;
-let def_currentZoom = 1;
+let def_defaultZoom = 1;
+let def_currentZoom = def_defaultZoom;
 
 let pointZoomOn = false;
 
@@ -163,6 +164,11 @@ function zoom(event){
     else{
         draw.zoom(def_currentZoom);
     }
+}
+
+function resetZoomLevel(){
+    def_currentZoom = def_defaultZoom;
+    draw.zoom(def_currentZoom);
 }
 
 ////Change nodes appearence on mouse over

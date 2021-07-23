@@ -29,9 +29,9 @@
                 <a class="navbar-brand" href="#">SplayNet</a>
                 <div class="collapse navbar-collapse p-3" id="navbarToggler">
                     <div class=" d-inline-flex m-2 align-self-center">
-                        <input class="form-control me-2" placeholder="15" type="number" id="nodeCount"/>
+                        <input class="form-control me-2 input-field-nodes" placeholder="15" type="number" id="nodeCount"/>
                         <button class="btn btn-outline-success me-2" type="button" id="generateTree" onclick="generateTree()">Generate</button>
-                        <button class="btn btn-outline-success me-2 text-nowrap" id="redrawTree" onclick="redrawTree()">Reset Tree</button>
+                        <button class="btn btn-outline-success me-2 text-nowrap" id="redrawTree" onclick="resetView()">Reset View</button>
                     </div>
                     <div class="m-2 align-self-center d-flex">
                         <button class="btn btn-outline-success me-2" id="saveTree" onclick="saveTree()">Save</button>
@@ -71,9 +71,6 @@
         </nav>
 
         <hr>
-        <div id="temp"></div>
-        <input type="checkbox" onclick="switchZoom(this)"> ZoomToPoint (test)
-        <hr>
 
         <div id="logs" class="row">
             <div class="col">
@@ -94,11 +91,19 @@
             </div>
         </div>
 
+
         <hr>
 
         <div id="SVGContainer" class="svg-wrapper border d-flex" onmouseup="checkSelected(event)">
-
+            <div class="form-check hovering">
+                <input class="form-check-input" type="checkbox" id="pointZoomCheck" onclick="switchZoom(this)" unchecked>
+                <label class="form-check-label" for="pointZoomCheck">
+                    Zoom to cursor
+                </label>
+            </div>
         </div>
+
+
     </div>
 
     <!-- Assist/Help button -->
@@ -130,7 +135,7 @@
                                                 <img src="res/img/nav1.png" class="w-100"/>
                                                 <ul>
                                                     <li>Generate: Generates a tree, depending on the amount inputed in the field left to it</li>
-                                                    <li>Reset: Resets the current display to the initial balanced tree</li>
+                                                    <li>Reset View: Recenters the tree in the middle of the screen with the default zoom level</li>
                                                     <li>Save: Saves the current tree with all executed communications and allows to download the file</li>
                                                     <li>Load: Loads a previously saved file, including executed communications</li>
                                                 </ul>
@@ -179,6 +184,12 @@
                                                     <li>If applicable, click the start/step button to start/continue the animation</li>
                                                     <li>Click and drag the right mouse button to pan the display</li>
                                                     <li>Use the mouse wheel to zoom into/out of the display</li>
+                                                    <li>Use the "zoom to cursor" checkbox to switch zoom mode:
+                                                        <ul>
+                                                            <li>If "zoom to cursor" is active, it will zoom to/from your mouse cursor position</li>
+                                                            <li>If "zoom to cursor" is inactive, it will always zoom to/from the center of the view</li>
+                                                        </ul>
+                                                    </li>
                                                 </ol>
                                             </div>
                                         </div>
@@ -202,7 +213,7 @@
                                                 </tr>
                                                 <tr>
                                                     <th>BibTex:</th>
-                                                    <td><a href="https://www.univie.ac.at/ct/stefan/stefan_schmid-all.bib">BibTex</a></td>
+                                                    <td><a href="citation/ton15splay.bibtex">BibTex</a></td>
                                                 </tr>
                                                 <tr>
                                                     <th>Links:</th>

@@ -34,21 +34,22 @@ function generateTree(){
 
     if (nodesToGenerate < 0)
         return;
-    redrawTree();
-}
-
-//Reset Tree
-function redrawTree(){
     clearLogs();
     finish_animation();
     tree = new SplayTree(nodesToGenerate);
     createSVGTree(tree);
-    resetTreeToCenter();
     switchAnimationButtonTo("start");
     switchNavbarElements(false);
+    resetView();
 }
 
-//Save
+//Reset View
+function resetView(){
+    resetZoomLevel();
+    resetTreeToCenter();
+}
+
+//Save Tree + download
 function saveTree(){
 
     let a = document.createElement("a");

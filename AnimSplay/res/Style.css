@@ -66,3 +66,14 @@ body{
     position: relative;
     margin-left: auto;
 }
+
+.input-field-nodes{
+    min-width: 150px;
+    width: 150px;
+}
+
+.hovering{
+    position: absolute;
+    margin: 10px;
+    z-index: 10;
+}
